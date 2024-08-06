@@ -1,0 +1,26 @@
+{
+  "name": "river-monitoring-system",
+  "version": "0.0.1",
+  "description": "A monitoring client and server for a smart river system",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "testriver",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarcoFMig/Elab3_IoT.git"
+  },
+  "keywords": [
+    "IoT"
+  ],
+  "author": "Leonardo Marcaccio, Lorenzo Dalmonte, Marco Francolini",
+  "license": "GPL-2.0-only",
+  "bugs": {
+    "url": "https://github.com/MarcoFMig/Elab3_IoT/issues"
+  },
+  "homepage": "https://github.com/MarcoFMig/Elab3_IoT#readme",
+  "devDependencies": {
+    "electron": "^31.2.1"
+  }
+}
