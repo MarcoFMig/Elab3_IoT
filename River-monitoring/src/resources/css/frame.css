@@ -1,0 +1,43 @@
+.program-bar {
+  width: 100%;
+  min-height: 25px;
+  background-color: #0C0C0C;
+  user-select: none;
+  display: flex;
+}
+.program-bar > #program-title {
+  -webkit-app-region: drag;
+  color: white;
+  padding: 5px;
+  flex-grow: 1;
+}
+.program-bar > #program-bar-btn-wrapper > button {
+  background-color: transparent;
+  border: none;
+  min-height: 20px;
+  height: 100%;
+  margin: 0;
+}
+.program-bar > #program-bar-btn-wrapper {
+  flex-grow: 0;
+}
+.program-bar > #program-bar-btn-wrapper img {
+  padding: 2px;
+  max-height: 18px;
+  max-width: 18px;
+  fill: white;
+}
+
+.program-bar > #program-bar-btn-wrapper > #btn-minimize:hover {
+  background-color: gray;
+}
+.program-bar > #program-bar-btn-wrapper > #btn-minimize:hover > img {
+  content: url(../images/vector/minus-line-icon-white.svg);
+}
+
+.program-bar > #program-bar-btn-wrapper > #btn-quit:hover > img {
+  content: url(../images/vector/power-off-line-icon.svg);
+}
+.program-bar > #program-bar-btn-wrapper > #btn-quit:hover {
+  background-color: red;
+}

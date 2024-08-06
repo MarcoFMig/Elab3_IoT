@@ -6,9 +6,13 @@ const createWindow = () => {
     width: 800,
     height: 600,
     frame: false,
+    center: true,
+    minWidth: 640,
+    minHeight: 480,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
-    }
+    },
+    icon: "./src/resources/images/river-monitoring.ico"
   })
   mainWindow.loadFile('src/index.html')
 }

@@ -1,0 +1,26 @@
+@font-face {
+  font-family: 'Eurostile Regular';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Eurostile Regular'), url('./../fonts/eurostile.woff') format('woff');
+}
+@font-face {
+  font-family: 'EuroStyle Normal';
+  font-style: normal;
+  font-weight: normal;
+  src: local('EuroStyle Normal'), url('./../fonts/EuroStyle Normal.woff') format('woff');
+}
+
+* {
+  font-family: Eurostile Regular;
+  font-size: 25px;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+  background: rgb(0,0,0);
+  background: linear-gradient(330deg, rgba(0,0,0,1) 0%, rgba(130,0,0,1) 100%);
+}
