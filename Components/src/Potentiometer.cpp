@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "Led.hpp"
+#include "Potentiometer.hpp"
 
 Potentiometer::Potentiometer() {
     this->potentiometerInPin = A0;
@@ -9,8 +9,8 @@ Potentiometer::Potentiometer() {
 }
 
 int Potentiometer::getValue() {
-    sensorValue = analogRead(this->potentiometerInPin);
-    outputValue = map(sensorValue, 0, 1023, this->mapLow, this->mapHigh);
+    uint8_t sensorValue = analogRead(this->potentiometerInPin);
+    uint8_t outputValue = map(sensorValue, 0, 1023, this->mapLow, this->mapHigh);
     analogWrite(this->potentiometerOutPin, outputValue); 
     return outputValue;
 }
