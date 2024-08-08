@@ -8,8 +8,8 @@ class Led {
         bool isOn;
     
     public:
-        Led() = delete;
-        virtual void setToggle(bool toggle) = 0;
+        Led();
+        virtual void setToggle(bool toggle);
 };
 
 #endif

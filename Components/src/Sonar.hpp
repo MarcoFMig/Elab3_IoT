@@ -1,7 +1,7 @@
 #ifndef SONAR_CLASS
 #define SONAR_CLASS
 
-class Sonar {
+class Sonar{
 
     private:
         int trigPin;
@@ -9,8 +9,8 @@ class Sonar {
         float vs;
     
     public:
-        Sonar() = delete;
-        virtual float getLevel() = 0;
+        Sonar();
+        virtual float getLevel();
 };
 
 #endif
