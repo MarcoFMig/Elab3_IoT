@@ -1,13 +1,14 @@
 #include <Arduino.h>
 #include "Button.hpp"
 
-void Button::switchButtonState() {
-    this->pressed = !this->pressed;
+void switchButtonState(Button button) {
+    button->pressed = !button->pressed;
 }
 
 Button::Button() {
     this->buttonPin = 2;
     this->pressed = false;
+    this->f_press_button = std::bind(switchButtonState, this);
     pinMode(this->buttonPin, INPUT);
     attachInterrupt(0, this->switchButtonState, RISING);
 }
