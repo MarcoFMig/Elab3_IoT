@@ -17,7 +17,7 @@ float Sonar::getLevel() {
     delayMicroseconds(5);
     digitalWrite(this->trigPin, LOW);
     /* receiving the eco */
-    float tUS = pulseIn(ths->echoPin, HIGH);
+    float tUS = pulseIn(this->echoPin, HIGH);
     float t = tUS / 1000.0 / 1000.0 / 2;
     float d = t*this->vs;
     return d;
