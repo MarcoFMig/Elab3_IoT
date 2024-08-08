@@ -10,7 +10,7 @@ Button::Button() {
     this->pressed = false;
     this->f_press_button = std::bind(switchButtonState, this);
     pinMode(this->buttonPin, INPUT);
-    attachInterrupt(0, this->switchButtonState, RISING);
+    attachInterrupt(0, this->f_press_button, RISING);
 }
 
 bool Button::isPressed() {
