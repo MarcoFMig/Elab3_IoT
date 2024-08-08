@@ -9,8 +9,8 @@ class LCDDisplay {
         LiquidCrystal_I2C lcd;
     
     public:
-        LCDDisplay() = delete;
-        virtual void displayInfo(bool mode, int angle) = 0;
+        LCDDisplay();
+        virtual void write(const __FlashStringHelper * text);
 };
 
 #endif

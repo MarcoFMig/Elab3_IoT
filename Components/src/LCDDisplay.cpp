@@ -2,15 +2,12 @@
 #include <LiquidCrystal_I2C.h>
 #include "LCDDisplay.hpp"
 
-LCDDisplay::LCDDisplay() {
-    this->lcd = LiquidCrystal_I2C(0x20, 16, 2);
+LCDDisplay::LCDDisplay() : lcd(0x27, 20, 4) {
     this->lcd.init();
-    this->lcd.clear();
     this->lcd.backlight();
 }
 
-void LCDDisplay::displayInfo(bool mode, int angle) {
+void LCDDisplay::write(const __FlashStringHelper * text) {
     this->lcd.clear();
-    this->lcd.home();
-    this->lcd.print("Mode: " + mode ? "Manual" : "Auto");
+    this->lcd.print(text);
 }
