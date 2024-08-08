@@ -1,8 +1,10 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('node:path')
 
+let mainWindow;
+
 const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     frame: false,
@@ -10,11 +12,13 @@ const createWindow = () => {
     minWidth: 640,
     minHeight: 480,
     webPreferences: {
+      sandbox: false,
+      //nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js')
     },
     icon: "./src/resources/images/river-monitoring.ico"
   })
-  mainWindow.loadFile('src/index.html')
+  mainWindow.loadFile('./src/index.html')
 }
 
 app.whenReady().then(() => {

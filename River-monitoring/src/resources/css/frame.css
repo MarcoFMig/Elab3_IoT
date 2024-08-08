@@ -12,6 +12,7 @@
   flex-grow: 1;
 }
 .program-bar > #program-bar-btn-wrapper > button {
+  transition: 500ms;
   background-color: transparent;
   border: none;
   min-height: 20px;
@@ -22,6 +23,7 @@
   flex-grow: 0;
 }
 .program-bar > #program-bar-btn-wrapper img {
+  transition: 500ms;
   padding: 2px;
   max-height: 18px;
   max-width: 18px;
