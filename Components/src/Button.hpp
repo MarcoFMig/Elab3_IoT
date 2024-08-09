@@ -4,9 +4,8 @@
 class Button {
 
     private:
-        int buttonPin;
+        uint8_t buttonPin;
         bool pressed;
-        void (*switchStateWrap)();
     
     public:
         Button() = delete;

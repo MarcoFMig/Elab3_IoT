@@ -4,10 +4,10 @@
 class Potentiometer {
 
     private:
-        int potentiometerInPin;
-        int potentiometerOutPin;
-        int mapLow;
-        int mapHigh;
+        uint8_t potentiometerInPin;
+        uint8_t potentiometerOutPin;
+        uint8_t mapLow;
+        uint8_t mapHigh;
     
     public:
         Potentiometer() = delete;

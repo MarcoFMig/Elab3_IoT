@@ -4,7 +4,7 @@
 class Led {
 
     private:
-        int ledPin;
+        uint8_t ledPin;
         bool isOn;
     
     public:

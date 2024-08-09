@@ -1,11 +1,11 @@
 #ifndef SONAR_CLASS
 #define SONAR_CLASS
 
-class Sonar{
+class Sonar {
 
     private:
-        int trigPin;
-        int echoPin;
+        uint8_t trigPin;
+        uint8_t echoPin;
         float vs;
     
     public:
