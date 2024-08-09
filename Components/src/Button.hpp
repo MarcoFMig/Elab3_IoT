@@ -5,12 +5,12 @@ class Button {
 
     private:
         uint8_t buttonPin;
-        bool pressed;
+        bool state;
     
     public:
-        Button() = delete;
-        virtual bool isPressed() = 0;
-        virtual void updateState() = 0;
+        Button();
+        virtual bool getCurrentState();
+        virtual void updateState();
 };
 
 #endif

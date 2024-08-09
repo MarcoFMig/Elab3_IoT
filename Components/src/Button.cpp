@@ -15,18 +15,19 @@ void interruptCall() {
 
 Button::Button() {
     this->buttonPin = 2;
-    this->pressed = false;
+    this->state = false;
     pinMode(this->buttonPin, INPUT);
     attachInterrupt(0, interruptCall, RISING);
 }
 
-bool Button::isPressed() {
-    return this->pressed;
+bool Button::getCurrentState() {
+    return this->state;
 }
 
 void Button::updateState() {
     if (lastInterruptedPin == this->buttonPin) {
-        this->pressed = !this->pressed;
+        this->state = !this->state;
         lastInterruptedPin = 0;
     }
+
 }
