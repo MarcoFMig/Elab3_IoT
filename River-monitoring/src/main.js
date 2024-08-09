@@ -17,9 +17,9 @@ const createWindow = () => {
       //nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: "./src/resources/images/river-monitoring.ico"
+    icon: path.join(__dirname, "./resources/images/river-monitoring.ico")
   })
-  mainWindow.loadFile('./src/index.html')
+  mainWindow.loadFile(path.join(__dirname, './index.html'))
 }
 
 function createTrayElement(createTrayElement) {

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<svg width="583" height="584" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <defs>
+  <symbol enable-background="new 0 0 100 100" id="svg_1" version="1.1" viewBox="0 0 100 125" x="0px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" y="0px">
+   <path d="m36.41,9.29l0,81.42c0,2.43 -1.3,4.67 -3.4,5.88s-4.68,1.21 -6.78,0s-3.39,-3.45 -3.39,-5.88l0,-65.04l-8.78,8.77c-1.72,1.69 -4.2,2.34 -6.53,1.71c-2.32,-0.63 -4.14,-2.45 -4.77,-4.77c-0.63,-2.33 0.02,-4.81 1.71,-6.53l20.35,-20.36c1.28,-1.27 3,-1.99 4.8,-1.99s3.53,0.72 4.8,1.99c1.27,1.27 1.99,3 1.99,4.8l0,0zm59.08,56.27c-1.27,-1.27 -3,-1.99 -4.8,-1.99s-3.52,0.72 -4.8,1.99l-8.77,8.77l0,-65.04c0,-2.43 -1.29,-4.67 -3.39,-5.88s-4.69,-1.21 -6.79,0s-3.39,3.45 -3.39,5.88l0,81.42c0,1.8 0.71,3.53 1.99,4.8c1.27,1.27 2.99,1.99 4.79,1.99s3.53,-0.72 4.8,-1.99l20.36,-20.36c1.27,-1.27 1.99,-2.99 1.99,-4.79c0,-1.8 -0.72,-3.53 -1.99,-4.8l0,0z"/>
+  </symbol>
+ </defs>
+ <g class="layer">
+  <title>Layer 1</title>
+  <use fill="#00ff00" id="svg_2" transform="matrix(1.31004, 0, 0, 1.31017, 0.0354187, 105.692)" x="-68.94" xlink:href="#svg_1" y="-91.47"/>
+ </g>
+</svg>

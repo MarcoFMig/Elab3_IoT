@@ -1,6 +1,7 @@
 .program-bar {
   width: 100%;
-  min-height: 25px;
+  min-height: 40px;
+  max-height: 40px;
   background-color: #0C0C0C;
   user-select: none;
   display: flex;
@@ -47,4 +48,19 @@
 }
 .program-bar > #program-bar-btn-wrapper > #btn-quit:hover {
   background-color: red;
+}
+
+#ui-header-undersection {
+  min-height: 33px;
+  max-height: 33px;
+  width: 100%;
+  background-color: #030303;
+  display: flex;
+  flex-flow: row-reverse;
+}
+
+#ui-header-undersection > img{
+  margin: 2px, 5px;
+  max-width: 25px;
+  margin: 4px 8px;
 }
