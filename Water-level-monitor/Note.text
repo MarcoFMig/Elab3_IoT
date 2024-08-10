@@ -1,0 +1,6 @@
+The water level monitoring subsystem is responsible for continuously monitoring the level of the water, by means of the sonar.
+The water level is sampled and sent to the River Monitor Service with some  frequency F 
+This frequency depends on the state of the system and is established by the River Monitoring Service (see later).
+When the system is working correctly (network ok, sending data ok)  the green led is on and the red is off; otherwise:
+ – in the case of network problems
+ – the red led should be on and the green led off.
