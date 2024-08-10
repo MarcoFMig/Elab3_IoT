@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include "Sonar.hpp"
 
-Sonar::Sonar() {
-    this->trigPin = 8;
-    this->echoPin = 7;
+Sonar::Sonar(uint8_t trigPin, uint8_t echoPin) {
+    this->trigPin = trigPin;
+    this->echoPin = echoPin;
     this->vs = 331.5 + 0.6*20;
     pinMode(this->trigPin, OUTPUT);
     pinMode(this->echoPin, INPUT);

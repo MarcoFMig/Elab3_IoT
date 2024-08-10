@@ -9,7 +9,7 @@ class Sonar {
         float vs;
     
     public:
-        Sonar();
+        Sonar(uint8_t trigPin, uint8_t echoPin);
         virtual float getLevel();
 };
 
