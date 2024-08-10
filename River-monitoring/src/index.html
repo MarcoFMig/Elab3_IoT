@@ -6,26 +6,82 @@
     <link rel="stylesheet" type="text/css" href="./resources/css/main.css" />
     <link rel="stylesheet" type="text/css" href="./resources/css/frame.css" />
     <script src="./resources/javascript/renderer.js"></script>
+    <script src="./resources/javascript/external/chart.js"></script>
   </header>
   <body>
     <head>
-      <div class="program-bar">
-        <span id="program-title">
-          River Monitor
-        </span>
-        <div id="program-bar-btn-wrapper">
-          <button id="btn-minimize">
-            <img src="./resources/images/vector/minus-line-icon-white.svg">
-          </button>
-          <button id="btn-enlarge">
-            <img src="./resources/images/vector/four-corners-arrows-line-icon-white.svg">
-          </button>
-          <button id="btn-quit">
-            <img src="./resources/images/vector/power-off-line-icon-red.svg">
-          </button>
+      <div id="ui-main-container">
+        <div class="program-bar">
+          <span id="program-title">
+            River Monitor
+          </span>
+          <div id="program-bar-btn-wrapper">
+            <button id="btn-minimize">
+              <img src="./resources/images/vector/minus-line-icon-white.svg">
+            </button>
+            <button id="btn-enlarge">
+              <img src="./resources/images/vector/four-corners-arrows-line-icon-white.svg">
+            </button>
+            <button id="btn-quit">
+              <img src="./resources/images/vector/power-off-line-icon-red.svg">
+            </button>
+          </div>
+        </div>
+        <script src="./resources/javascript/titlebarmanager.js"></script>
+        <div id="ui-header-undersection">
+          <img id="ui-header-connectivity-icon" src="./resources/images/vector/network-icon-red.svg" title="Connectivity">
+          <img id="ui-header-traffic-icon" src="./resources/images/vector/traffic-icon-white.svg" title="Traffic">
+        </div>
+      </head>
+      <div class="ui-pillbox-container">
+        <div class="ui-pillbox" id="sampling-rate-regulator">
+          <h1>Data send frequency selector</h1>
+          <p>Current sampling value: 60rph</p>
+          <form>
+            <input type="range" min="1" max="100" value="50" class="slider" id="sampling-rate-range">
+            <label for="sampling-rate-range">Current value: Xrph</label>
+          </form>
+        </div>
+        <div class="ui-pillbox">
+          <h1>System status monitor</h1>
+          <h2>Ok</h2>
+        </div>
+        <div class="ui-pillbox" id="water-level-trend-graph">
+          <h1>Water level trend</h1>
+          <canvas id="water-level-trend-chart">
+          </canvas>
+          <script>
+            const ctx = document.getElementById('water-level-trend-chart');
+          
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                datasets: [{
+                  label: '# of Votes',
+                  data: [12, 19, 3, 5, 2, 3],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+          </script>
+        </div>
+        <div class="ui-pillbox" id="dam-valve-controller">
+          <h1>Valve control panel</h1>
+          <h2>Current valve opening level: X%</h2>
+          <form>
+            <label for="valve-opening-regulator">Valve opening level</label>
+            <input type="range" min="1" max="100" value="50" step="10" class="slider" id="valve-opening-regulator">
+          </form>
         </div>
       </div>
-      <script src="./resources/javascript/titlebarmanager.js"></script>
-    </head>
+    </div>
   </body>
 </html>
