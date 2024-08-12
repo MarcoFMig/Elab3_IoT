@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron')
-const path = require('node:path')
+const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron');
+const path = require('node:path');
+const mqtt = require('mqtt');
 
 let mainWindow = null;
 let trayElement = null;
@@ -62,3 +63,35 @@ ipcMain.on("wc-hide", (event, title) => {
   mainWindow.hide();
   createTrayElement(true);
 });
+
+// MQTT Handling
+
+class SimpleMQTTConnection {
+  constructor(address) {
+    this.address = address;
+    this.options = {
+      keepalive: 30,
+      clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
+      protocolId: 'MQTT',
+      protocolVersion: 4,
+      clean: true,
+      reconnectPeriod: 1000,
+      connectTimeout: 30 * 1000,
+      will: {
+        topic: 'WillMsg',
+        payload: 'Connection Closed abnormally..!',
+        qos: 0,
+        retain: false,
+      },
+      rejectUnauthorized: false,
+    };
+    this.connection = null;
+  }
+  connect() {
+    this.connection = mqtt.connect(this.address, this.options);
+  }
+  disconnect() {
+    this.connection.end();
+    this.connection = null;
+  }
+}
