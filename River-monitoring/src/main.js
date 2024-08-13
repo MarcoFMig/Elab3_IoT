@@ -15,12 +15,13 @@ const createWindow = () => {
     minHeight: 480,
     webPreferences: {
       sandbox: false,
-      //nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, "./resources/images/river-monitoring.ico")
   })
   mainWindow.loadFile(path.join(__dirname, './index.html'))
+  /*mainWindow.on('show', () => {
+  });*/
 }
 
 function createTrayElement(createTrayElement) {
@@ -44,11 +45,13 @@ function createTrayElement(createTrayElement) {
 app.whenReady().then(() => {
   createWindow()
 
-  mainWindow.on('show', () => createTrayElement(false));
+  mainWindow.on('show', () => {
+    createTrayElement(false);
+    postWindowCreation();
+  });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
-  
 })
 
 app.on('window-all-closed', () => {
@@ -65,12 +68,29 @@ ipcMain.on("wc-hide", (event, title) => {
 });
 
 // MQTT Handling
+let mqttConnections = new Map();
+let mqttConnectionsLastIndex = 0;
+let freeIndexes = new Array();
+
+function requestNewIndex() {
+  let returnIndex = null;
+  if (freeIndexes.length > 0) {
+    returnIndex = freeIndexes.pop();
+  } else {
+    returnIndex = mqttConnectionsLastIndex
+    mqttConnectionsLastIndex;
+  }
+  return returnIndex;
+}
+function freeIndex(index) {
+  freeIndexes.push(index);
+}
 
 class SimpleMQTTConnection {
   constructor(address) {
     this.address = address;
     this.options = {
-      keepalive: 30,
+      keepalive: 60,
       clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
       protocolId: 'MQTT',
       protocolVersion: 4,
@@ -78,7 +98,7 @@ class SimpleMQTTConnection {
       reconnectPeriod: 1000,
       connectTimeout: 30 * 1000,
       will: {
-        topic: 'WillMsg',
+        topic: 'esiot-2023',
         payload: 'Connection Closed abnormally..!',
         qos: 0,
         retain: false,
@@ -89,9 +109,41 @@ class SimpleMQTTConnection {
   }
   connect() {
     this.connection = mqtt.connect(this.address, this.options);
+    this.connection.on('error', (err) => {
+      console.log('Connection error: ', err)
+      this.connection.end()
+    })
+    this.connection.on('connect', () => {
+      console.log('Client connected:' + this.options.clientId)
+      this.connection.subscribe(this.options.will.topic, () => console.log("test"));
+    })
+    this.connection.on('reconnect', () => {
+      console.log('Reconnecting...')
+    })
+    this.connection.on('message', (topic, message, packet) => {
+      console.log(
+        'Received Message: ' + message.toString() + '\nOn topic: ' + topic
+      )
+    })
   }
   disconnect() {
     this.connection.end();
     this.connection = null;
   }
+}
+
+class MQTTData {
+  constructor(id, hostname) {
+    this.id = id;
+    this.hostname = hostname;
+  }
+}
+
+ipcMain.on("mqtt-connection-open", (theme, arguments) => {
+  let requestedIndex = requestNewIndex();
+  mqttConnections[requestedIndex] = new SimpleMQTTConnection(arguments);
+  mqttConnections[requestedIndex].connect();
+});
+function postWindowCreation() {
+  //let k = new window.systemInterface.mqttApi.Data(1, 1);
 }

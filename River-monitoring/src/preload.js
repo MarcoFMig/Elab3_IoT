@@ -28,10 +28,28 @@ const guiControl = {
   }
 }
 
+const mqttApi = {
+  consts: {
+    OPEN_CONNECTION: "mqtt-connection-open",
+    CLOSE_CONNECTION: "mqtt-connection-open",
+    CONNECTION_ERROR: "mqtt-connection-error",
+    MESSAGE_RECIEVED: "mqtt-message-recieved",
+    SEND_MESSAGE: "mqtt-send-message"
+  },
+  Data: class MQTTData {
+    constructor(id, hostname) {
+      this.id = id;
+      this.hostname = hostname;
+    }
+  }
+}
+
 contextBridge.exposeInMainWorld("systemInterface", {
   guiConsts: guiConsts,
-  guiControl: guiControl
+  guiControl: guiControl,
+  mqttApi: mqttApi
 });
 contextBridge.exposeInMainWorld("mainCommunicator", {
-  fire: (key, arguments) => ipcRenderer.send(key, arguments)
+  fire: (key, arguments) => ipcRenderer.send(key, arguments),
+  register: (key, action) => ipcRenderer.on(key, (arguments) => action(arguments))
 });
