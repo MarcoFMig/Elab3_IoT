@@ -33,10 +33,20 @@ unsigned long lastMsgTime = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-Led greenLed;
-Led redLed;
-Sonar sonar;
+Led greenLed = Led(LED_PIN_GREEN);
+Led redLed = Led(LED_PIN_RED);
+Sonar sonar = Sonar(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
 uint8_t scanDelay;
+
+void updateLedStates(bool isNetOk, bool isSendDataOk) {
+  if (isNetOk && isSendDataOk) {
+    greenLed.setToggle(LED_ON);
+    redLed.setToggle(LED_OFF);
+  } else {
+    greenLed.setToggle(LED_OFF);
+    redLed.setToggle(LED_ON);
+  }
+}
 
 void setup_wifi() {
   delay(10);
@@ -60,6 +70,7 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   scanDelay = 1000/F2;
   Serial.println(String("Message arrived on [") + topic + "] len: " + length );
+  
 }
 
 void reconnect() {
@@ -89,16 +100,6 @@ void reconnect() {
   }
 }
 
-void updateLedStates(bool isNetOk, bool isSendDataOk) {
-  if (isNetOk && isSendDataOk) {
-    greenLed.setToggle(LED_ON);
-    redLed.setToggle(LED_OFF);
-  } else {
-    greenLed.setToggle(LED_OFF);
-    redLed.setToggle(LED_ON);
-  }
-}
-
 void setup() {
   Serial.begin(115200);
   setup_wifi();
@@ -106,9 +107,6 @@ void setup() {
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
-  greenLed = Led(LED_PIN_GREEN);
-  redLed = Led(LED_PIN_RED);
-  sonar = Sonar(uint8_t SONAR_TRIGGER_PIN, uint8_t SONAR_ECHO_PIN);
   scanDelay = 1000/F1;
 }
 
