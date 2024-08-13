@@ -45,31 +45,3 @@ body {
                      var(--sb-track-color);
   }
 }
-
-.ui-pillbox-container {
-  display: flex;
-  flex-wrap: wrap;
-  overflow-y: auto;
-}
-
-.ui-pillbox {
-  transition: 250ms;
-  color: rgb(192, 192, 192);
-  margin: 10px;
-  padding: 5px 15px;
-  background-color:rgba(20, 20, 20, 0.75);
-  min-width: 233px;
-  min-height: 190px;
-  border-radius: 10px;
-}
-.ui-pillbox:hover {
-  background-color:rgba(20, 20, 20, 1);
-}
-
-#ui-main-container {
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-}

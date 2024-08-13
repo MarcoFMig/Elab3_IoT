@@ -8,7 +8,7 @@ class Led {
         bool isOn;
     
     public:
-        Led();
+        Led(uint8_t pin);
         virtual void setToggle(bool toggle);
 };
 

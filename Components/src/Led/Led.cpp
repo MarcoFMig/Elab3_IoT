@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include "Led.hpp"
 
-Led::Led() {
-    this->ledPin = 13;
+Led::Led(uint8_t pin) {
+    this->ledPin = pin;
     this->isOn = false;
     pinMode(this->ledPin, OUTPUT);
 }
