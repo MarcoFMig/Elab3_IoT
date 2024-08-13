@@ -35,6 +35,7 @@ int value = 0;
 
 Led greenLed;
 Led redLed;
+Sonar sonar;
 uint8_t scanDelay;
 
 void setup_wifi() {
@@ -76,10 +77,12 @@ void reconnect() {
       // client.publish("outTopic", "hello world");
       // ... and resubscribe
       client.subscribe(topic);
+      updateLedStates(true, true);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
+      updateLedStates(false, false);
       // Wait 5 seconds before retrying
       delay(5000);
     }
@@ -105,6 +108,7 @@ void setup() {
 
   greenLed = Led(LED_PIN_GREEN);
   redLed = Led(LED_PIN_RED);
+  sonar = Sonar(uint8_t SONAR_TRIGGER_PIN, uint8_t SONAR_ECHO_PIN);
   scanDelay = 1000/F1;
 }
 
@@ -115,8 +119,8 @@ void loop() {
   }
   client.loop();
 
-  snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-  Serial.println(String("Publishing message: ") + msg);
+  snprintf(msg, MSG_BUFFER_SIZE, "Current level: %g", sonar.getLevel());
+  Serial.println(String("Sending data...") + msg);
   /* publishing the msg */
   client.publish(topic, msg);
 }
