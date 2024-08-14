@@ -10,7 +10,7 @@ class Potentiometer {
     
     public:
         Potentiometer();
-        virtual int getValue() = 0;
+        virtual uint8_t getValue();
 };
 
 #endif
