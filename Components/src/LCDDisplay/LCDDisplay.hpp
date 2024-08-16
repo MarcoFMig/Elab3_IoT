@@ -11,6 +11,8 @@ class LCDDisplay {
     
     public:
         LCDDisplay();
+        virtual void write(const char * text);
+        virtual void concat(const char * text);
         virtual void write(const __FlashStringHelper * text);
         virtual void concat(const __FlashStringHelper * text);
 };
