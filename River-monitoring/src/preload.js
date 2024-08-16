@@ -30,11 +30,17 @@ const guiControl = {
 
 const mqttApi = {
   consts: {
-    OPEN_CONNECTION: "mqtt-connection-open",
-    CLOSE_CONNECTION: "mqtt-connection-open",
-    CONNECTION_ERROR: "mqtt-connection-error",
-    MESSAGE_RECIEVED: "mqtt-message-recieved",
-    SEND_MESSAGE: "mqtt-send-message"
+    CREATE_CONNECTION:      "mqtt-connection-create",
+    DESTROY_CONNECTION:     "mqtt-connection-destroy",
+    OPEN_CONNECTION:        "mqtt-connection-open",
+    CLOSE_CONNECTION:       "mqtt-connection-close",
+    SUBSCRIBE_TOPIC:        "mqtt-connection-topic-subscribe",
+    UNSUBSCRIBE_TOPIC:      "mqtt-connection-topic-unsubscribe",
+    ADD_CONNECT_LISTENER:   "mqtt-connection-listener-connect-add",
+    ADD_RECONNECT_LISTENER: "mqtt-connection-listener-reconnect-add",
+    ADD_MESSAGE_LISTENER:   "mqtt-connection-listener-message-add",
+    ADD_DISCONNECT_LISTENER:"mqtt-connection-listener-disconnect-add",
+    ADD_ERROR_LISTENER:     "mqtt-connection-listener-error-add"
   },
   Data: class MQTTData {
     constructor(id, hostname) {
@@ -51,5 +57,6 @@ contextBridge.exposeInMainWorld("systemInterface", {
 });
 contextBridge.exposeInMainWorld("mainCommunicator", {
   fire: (key, arguments) => ipcRenderer.send(key, arguments),
-  register: (key, action) => ipcRenderer.on(key, (arguments) => action(arguments))
+  register: (key, action) => ipcRenderer.on(key, (arguments) => action(arguments)),
+  invoke: (key, arguments) => ipcRenderer.invoke(key, arguments)
 });
