@@ -1,3 +1,7 @@
+let globalValues = {
+  pillboxManager: null
+}
+
 const mainIC = {
   windowCtrl: {
     sendClose: () => window.mainCommunicator.fire("wc-close"),
@@ -10,8 +14,9 @@ const mainIC = {
 
 const renderer = {
   init: () => {
-    
+    globalValues.pillboxManager = new podManagers.PillboxUIManager(document.getElementById("ui-main-container"));
+    initRiverMonitorClient();
   }
 }
 
-document.onload = () => renderer.init();
+window.onload = () => renderer.init();
