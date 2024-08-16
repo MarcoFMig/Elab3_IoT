@@ -9,12 +9,23 @@ const podUi = {
       if (content instanceof HTMLElement) {
         this.pillboxContent = content;
         this.pillbox.appendChild(content);
+      } else if (content == null) {
+        return;
       } else {
         throw new Error("Unrecognized content type");
       }
     }
+    setTitle(titleText) {
+      this.pillboxTitle.innerHTML = titleText;
+    }
+    getTitle() {
+      return this.pillboxTitle;
+    }
     getElement() {
       return this.pillbox;
+    }
+    setContent(content) {
+      this.pillboxContent = content;
     }
     getContent() {
       return this.pillboxContent;
