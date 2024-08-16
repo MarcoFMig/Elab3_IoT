@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require('electron');
 const path = require('node:path');
 const mqtt = require('mqtt');
+const mqttModel = require(__dirname + "/mqttmodel.js");
 
 let mainWindow = null;
 let trayElement = null;
@@ -67,83 +68,6 @@ ipcMain.on("wc-hide", (event, title) => {
   createTrayElement(true);
 });
 
-// MQTT Handling
-let mqttConnections = new Map();
-let mqttConnectionsLastIndex = 0;
-let freeIndexes = new Array();
-
-function requestNewIndex() {
-  let returnIndex = null;
-  if (freeIndexes.length > 0) {
-    returnIndex = freeIndexes.pop();
-  } else {
-    returnIndex = mqttConnectionsLastIndex
-    mqttConnectionsLastIndex;
-  }
-  return returnIndex;
-}
-function freeIndex(index) {
-  freeIndexes.push(index);
-}
-
-class SimpleMQTTConnection {
-  constructor(address) {
-    this.address = address;
-    this.options = {
-      keepalive: 60,
-      clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
-      protocolId: 'MQTT',
-      protocolVersion: 4,
-      clean: true,
-      reconnectPeriod: 1000,
-      connectTimeout: 30 * 1000,
-      will: {
-        topic: 'esiot-2023',
-        payload: 'Connection Closed abnormally..!',
-        qos: 0,
-        retain: false,
-      },
-      rejectUnauthorized: false,
-    };
-    this.connection = null;
-  }
-  connect() {
-    this.connection = mqtt.connect(this.address, this.options);
-    this.connection.on('error', (err) => {
-      console.log('Connection error: ', err)
-      this.connection.end()
-    })
-    this.connection.on('connect', () => {
-      console.log('Client connected:' + this.options.clientId)
-      this.connection.subscribe(this.options.will.topic, () => console.log("test"));
-    })
-    this.connection.on('reconnect', () => {
-      console.log('Reconnecting...')
-    })
-    this.connection.on('message', (topic, message, packet) => {
-      console.log(
-        'Received Message: ' + message.toString() + '\nOn topic: ' + topic
-      )
-    })
-  }
-  disconnect() {
-    this.connection.end();
-    this.connection = null;
-  }
-}
-
-class MQTTData {
-  constructor(id, hostname) {
-    this.id = id;
-    this.hostname = hostname;
-  }
-}
-
-ipcMain.on("mqtt-connection-open", (theme, arguments) => {
-  let requestedIndex = requestNewIndex();
-  mqttConnections[requestedIndex] = new SimpleMQTTConnection(arguments);
-  mqttConnections[requestedIndex].connect();
-});
 function postWindowCreation() {
   //let k = new window.systemInterface.mqttApi.Data(1, 1);
 }
