@@ -1,12 +1,12 @@
 #include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #include "Button.hpp"
 #include "Potentiometer.hpp"
-#include "LCDDisplay.hpp"
 
 #define STATE_AUTO false
 #define STATE_MANUAL true
-#define PIN_SERVO A1
+#define PIN_SERVO A5
 #define ANGLE_0 0
 #define ANGLE_25 45
 #define ANGLE_50 90
@@ -17,26 +17,58 @@ const char valveOpening[] PROGMEM = "Valve opening:";
 const char automatic[] PROGMEM = "AUTOMATIC";
 const char manual[] PROGMEM = "MANUAL";
 
-Servo servo;
+Servo servo = Servo();
 Button button = Button();
 Potentiometer pot = Potentiometer();
-LCDDisplay lcd = LCDDisplay();
+LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 20, 4);
+
 String tmp;
 char buffer[BUF_SIZE];
 uint8_t angle;
+uint8_t curRow;
 uint8_t perc;
 
+void LCDWrite(const char * text) {
+    lcd.clear();
+    lcd.print(text);
+    curRow = 1;
+}
+
+void LCDConcat(const char * text) {
+    if (curRow >= 4) {
+        LCDWrite(text);
+    } else {
+        lcd.setCursor(0, curRow);
+        lcd.print(text);
+        curRow++;
+    }
+}
+
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  /*
+  lcd.init();
+  lcd.backlight();
+  */
   servo.attach(PIN_SERVO);
+  Serial.println("Swipe");
+  lcd.noDisplay();
+  servo.write(0);
+  delay(3000);
+  servo.write(180);
+  Serial.println(servo.read());
+  lcd.display();
 }
 
 void loop() {
+  /*
   if (button.getCurrentState() == STATE_AUTO) {
     while (Serial.available() == 0) {}
     tmp = Serial.readString();
+    Serial.println("Input ricevuto");
     strncpy(buffer, tmp.c_str(), BUF_SIZE);
     if (strncmp(buffer, valveOpening, 14) == 0) {
+        Serial.println("Entro nello switch");
         switch (buffer[16])
         {
             case 0:
@@ -52,16 +84,18 @@ void loop() {
                 angle = ANGLE_100;
                 break;
         }
-        lcd.write(buffer);
-        lcd.concat(automatic);
+        Serial.println(angle);
+        LCDWrite(buffer);
+        LCDConcat(automatic);
     }
   } else {
     perc = pot.getValue();
     angle = map(perc, 0, 100, 0, 180);
     snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
-    lcd.write(buffer);
-    lcd.concat(manual);
+    LCDWrite(buffer);
+    LCDConcat(manual);
   }
   servo.write(angle);
   delay(1000);
+  */
 }
