@@ -36,11 +36,11 @@ const mqttApi = {
     CLOSE_CONNECTION:       "mqtt-connection-close",
     SUBSCRIBE_TOPIC:        "mqtt-connection-topic-subscribe",
     UNSUBSCRIBE_TOPIC:      "mqtt-connection-topic-unsubscribe",
-    ADD_CONNECT_LISTENER:   "mqtt-connection-listener-connect-add",
-    ADD_RECONNECT_LISTENER: "mqtt-connection-listener-reconnect-add",
-    ADD_MESSAGE_LISTENER:   "mqtt-connection-listener-message-add",
-    ADD_DISCONNECT_LISTENER:"mqtt-connection-listener-disconnect-add",
-    ADD_ERROR_LISTENER:     "mqtt-connection-listener-error-add"
+    CONNECTION_EVT:         "mqtt-connection-listener-connect-add",
+    RECONNECT_EVT:          "mqtt-connection-listener-reconnect-add",
+    MESSAGE_EVT:            "mqtt-connection-listener-message-add",
+    DISCONNECT_EVT:         "mqtt-connection-listener-disconnect-add",
+    ERROR_EVT:              "mqtt-connection-listener-error-add"
   },
   Data: class MQTTData {
     constructor(id, hostname) {

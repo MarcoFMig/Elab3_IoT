@@ -13,6 +13,59 @@ class WaterLevelMonitor {
   }
 }
 
+let riverMonitor = null;
+
+class RiverMonitor {
+  constructor(address) {
+    this.address = address;
+  }
+  async init() {
+    this.connectionId =
+    await window.mainCommunicator.invoke(
+      window.systemInterface.mqttApi.consts.CREATE_CONNECTION,
+      this.address);
+    window.mainCommunicator.register(
+        window.systemInterface.mqttApi.consts.CONNECTION_EVT + "-" + connectionId,
+        () => {
+          console.log("connection succesfully enstabilished");
+        }
+      )
+  }
+  connect() {
+    
+  }
+  subscribeToTopic(topic) {
+    this.subscribedTopics.set(topic, null);
+    this.connection.subscribe(topic, () => console.log("test"));
+  }
+  unsubscribeToTopic(topic) {
+    this.subscribedTopics.delete(topic);
+  }
+  getSubscribedTopics() {
+    return this.subscribedTopics;
+  }
+
+  disconnect() {
+    this.connection.end();
+    this.connection = null;
+  }
+  addConnectListener(listener) {
+    this.connectListeners.push(listener);
+  }
+  addReconnectListener(listener) {
+    this.reconnectListeners.push(listener)
+  }
+  addMessageTopicListener(listener) {
+    this.messageListeners.push(listener);
+  }
+  addDisconnectListener(listener) {
+    this.disconnectListeners.push(listener);
+  }
+  addErrorListener(listener) {
+    this.errorListeners.push(listener);
+  }
+}
+
 const riverMonitorClientConsts = {
   topic: "esiot-2023"
 }
@@ -22,17 +75,20 @@ let waterLevelHistory = new Array();
 let wlm = new WaterLevelMonitor();
 
 async function initRiverMonitorComms() {
-  let connectionId =
+  riverMonitor = new RiverMonitor("mqtt://broker.mqtt-dashboard.com:1883");
+  await riverMonitor.init();
+  riverMonitor.connect();
+  /*let connectionId =
     await window.mainCommunicator.invoke(
       window.systemInterface.mqttApi.consts.CREATE_CONNECTION,
       "mqtt://broker.mqtt-dashboard.com:1883");
-  let opResult = 0;
-  opResult = await window.mainCommunicator.invoke(
-    window.systemInterface.mqttApi.consts.ADD_CONNECT_LISTENER,
+  wlm.setConnection(connectionId);
+  window.mainCommunicator.register(
+    window.systemInterface.mqttApi.consts.CONNECTION_EVT + "-" + connectionId,
     () => {
       console.log("connection succesfully enstabilished");
     }
-  )
+  )*/
   /*
   opResult = await window.mainCommunicator.invoke(
     window.systemInterface.mqttApi.consts.ADD_RECONNECT_LISTENER,
