@@ -62,6 +62,7 @@ class SimpleMQTTConnection {
       this.reconnectListeners.forEach(listener => listener())
     })
     this.connection.on('message', (topic, message, packet) => {
+      
       this.messageListeners.forEach(listener => listener(topic, message, packet));
     })
     this.connection.on('end', () => {
@@ -75,7 +76,7 @@ class SimpleMQTTConnection {
   }
   subscribeToTopic(topic) {
     this.subscribedTopics.set(topic, null);
-    this.connection.subscribe(topic, () => console.log("test"));
+    this.connection.subscribe(topic);
   }
   unsubscribeToTopic(topic) {
     this.subscribedTopics.delete(topic);
