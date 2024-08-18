@@ -88,6 +88,12 @@ class SimpleMQTTConnection {
     this.connection.end();
     this.connection = null;
   }
+  sendMessage(topic, message) {
+    this.connection.publish(topic, message, {
+      qos: this.options.will.qos,
+      retain: false
+    });
+  }
   addConnectListener(listener) {
     this.connectListeners.push(listener);
   }
@@ -141,6 +147,11 @@ contextBridge.exposeInMainWorld("mqttApi", {
       mqttConnections.get(identifier).disconnect();
     });
   },
+  sendMessage: (identifier, topic, message) => {
+    return safeExecution(identifier, () => {
+      mqttConnections.get(identifier).sendMessage(topic, message);
+    })
+  },
   destroyConnection: (identifier) => {
     return safeExecution(identifier, () => {
       if (mqttConnections.get(identifier).connectionValid) {
@@ -148,6 +159,16 @@ contextBridge.exposeInMainWorld("mqttApi", {
       }
       mqttConnections.delete(identifier);
       freeIndex(identifier);
+    });
+  },
+  subscribeToTopic: (identifier, topicName) => {
+    return safeExecution(identifier, () => {
+      mqttConnections.get(identifier).subscribeToTopic(topicName);
+    });
+  },
+  unsubscribeToTopic: (identifier, topicName) => {
+    return safeExecution(identifier, () => {
+      mqttConnections.get(identifier).unsubscribeToTopic(topicName);
     });
   },
   addConnectListener: (identifier, listener) => {

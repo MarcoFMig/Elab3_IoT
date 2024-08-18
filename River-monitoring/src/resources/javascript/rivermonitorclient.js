@@ -1,53 +1,60 @@
 class WaterLevelMonitor {
-  constructor() {
+  connectListeners = new Array();
+  reconnectListeners = new Array();
+  messageListeners = new Array();
+  disconnectListeners = new Array();
+  errorListeners = new Array();
+  subscribedTopics = new Map();
+
+  constructor(broker) {
+    this.broker = broker;
     this.connected = false;
     this.identifier = null;
+    this.init();
   }
-  setConnection(identifier) {
-    this.connectionId = identifier;
-    this.connected = true;
-  }
-  reset() {
-    this.connected = false;
-    this.identifier = null;
-  }
-}
-
-let riverMonitor = null;
-
-class RiverMonitor {
-  constructor(address) {
-    this.address = address;
-  }
-  async init() {
-    this.connectionId =
-    await window.mainCommunicator.invoke(
-      window.systemInterface.mqttApi.consts.CREATE_CONNECTION,
-      this.address);
-    window.mainCommunicator.register(
-        window.systemInterface.mqttApi.consts.CONNECTION_EVT + "-" + connectionId,
-        () => {
-          console.log("connection succesfully enstabilished");
-        }
-      )
+  init() {
+    let opResult = 0;
+    let errorText = "Error occourred while attempting to connect!";
+    this.identifier = window.mqttApi.createConnection(this.broker);
+    opResult = window.mqttApi.addConnectListener(this.identifier, () => {
+      this.connectListeners.forEach(listener => listener());
+    });
+    if (opResult != 0) {
+      throw new Error(errorText);
+    }
+    opResult = window.mqttApi.addReconnectListener(this.identifier, () => {
+      this.reconnectListeners.forEach(listener => listener());
+    });
+    if (opResult != 0) {
+      throw new Error(errorText);
+    }
+    opResult = window.mqttApi.addDisconnectListener(this.identifier, () => {
+      this.disconnectListeners.forEach(listener => listener());
+    });
+    if (opResult != 0) {
+      throw new Error(errorText);
+    }
+    opResult = window.mqttApi.addErrorListener(this.identifier, () => {
+      this.errorListeners.forEach(listener => listener());
+    });
+    if (opResult != 0) {
+      throw new Error(errorText);
+    }
+    opResult = window.mqttApi.addMessageTopicListener(this.identifier, () => {
+      this.messageListeners.forEach(listener => listener());
+    });
+    if (opResult != 0) {
+      throw new Error(errorText);
+    }
   }
   connect() {
-    
+    return window.mqttApi.connect(this.identifier);
   }
-  subscribeToTopic(topic) {
-    this.subscribedTopics.set(topic, null);
-    this.connection.subscribe(topic, () => console.log("test"));
-  }
-  unsubscribeToTopic(topic) {
-    this.subscribedTopics.delete(topic);
-  }
-  getSubscribedTopics() {
-    return this.subscribedTopics;
-  }
-
   disconnect() {
-    this.connection.end();
-    this.connection = null;
+    return window.mqttApi.disconnect(this.identifier);
+  }
+  sendMessage(topic, message) {
+    return window.mqttApi.sendMessage(this.identifier, topic, message)
   }
   addConnectListener(listener) {
     this.connectListeners.push(listener);
@@ -66,6 +73,8 @@ class RiverMonitor {
   }
 }
 
+let riverMonitor = null;
+
 const riverMonitorClientConsts = {
   topic: "esiot-2023"
 }
@@ -74,46 +83,11 @@ let riverMonitorConnectionPod = null;
 let waterLevelHistory = new Array();
 let wlm = new WaterLevelMonitor();
 
-async function initRiverMonitorComms() {
-  riverMonitor = new RiverMonitor("mqtt://broker.mqtt-dashboard.com:1883");
-  await riverMonitor.init();
-  riverMonitor.connect();
-  /*let connectionId =
-    await window.mainCommunicator.invoke(
-      window.systemInterface.mqttApi.consts.CREATE_CONNECTION,
-      "mqtt://broker.mqtt-dashboard.com:1883");
-  wlm.setConnection(connectionId);
-  window.mainCommunicator.register(
-    window.systemInterface.mqttApi.consts.CONNECTION_EVT + "-" + connectionId,
-    () => {
-      console.log("connection succesfully enstabilished");
-    }
-  )*/
-  /*
-  opResult = await window.mainCommunicator.invoke(
-    window.systemInterface.mqttApi.consts.ADD_RECONNECT_LISTENER,
-    () => {
-      console.log("reconnecting to water level monitor");
-    }
-  )
-  opResult = await window.mainCommunicator.invoke(
-    window.systemInterface.mqttApi.consts.ADD_ERROR_LISTENER,
-    () => {
-      console.log("error in water level monitor connection");
-    }
-  )
-  opResult = await window.mainCommunicator.invoke(
-    window.systemInterface.mqttApi.consts.ADD_DISCONNECT_LISTENER,
-    () => {
-      console.log("succesfully disconnected from water level monitor");
-    }
-  )
-  opResult = await window.mainCommunicator.invoke(
-    window.systemInterface.mqttApi.consts.ADD_MESSAGE_LISTENER,
-    () => {
-      console.log("recieved message from water level monitor");
-    }
-  )*/
+function initRiverMonitorComms() {
+  wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
+  wlm.init();
+  wlm.connect();
+  wlm.sendMessage("esiot-2023", "Ora sì che funziona!");
 }
 
 function initRiverMonitorClient() {
