@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <header>
+  <head>
     <title>River Monitor</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
     <link rel="stylesheet" type="text/css" href="./resources/css/main.css" />
     <link rel="stylesheet" type="text/css" href="./resources/css/frame.css" />
     <link rel="stylesheet" type="text/css" href="./resources/css/podui.css" />
@@ -11,9 +12,9 @@
     <script src="./resources/javascript/renderer.js"></script>
     <script src="./resources/javascript/rivermonitorclient.js"></script>
     <script src="./resources/javascript/external/chart.js"></script>
-  </header>
+  </head>
   <body>
-    <head>
+    <header>
       <div id="ui-main-container">
         <div class="program-bar">
           <span id="program-title">
@@ -36,7 +37,7 @@
           <img id="ui-header-connectivity-icon" src="./resources/images/vector/network-icon-red.svg" title="Connectivity">
           <img id="ui-header-traffic-icon" src="./resources/images/vector/traffic-icon-white.svg" title="Traffic">
         </div>
-      </head>
+      </header>
     </div>
   </body>
 </html>
