@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer, remote } = require('electron');
 const mqttHandling = require('./mqtthandling.js')
+const comHandling = require('./comhandling.js')
 
 const guiConsts = {
   windowActions: {

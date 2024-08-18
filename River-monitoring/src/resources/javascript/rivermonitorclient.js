@@ -1,3 +1,5 @@
+let trafficDashboardIcon = null;
+
 class WaterLevelMonitor {
   connectListeners = new Array();
   reconnectListeners = new Array();
@@ -90,7 +92,11 @@ function initRiverMonitorComms() {
   wlm.sendMessage("esiot-2023", "Ora sì che funziona!");
 }
 
-function initRiverMonitorClient() {
+function gatherRequiredElements() {
+  
+}
+
+function generateControlPod() {
   let riverMonitorPodText = document.createElement("p");
   riverMonitorPodText.innerHTML = "Water level monitor is not currently connected";
   let riverMonitorPodStartConnBtn = document.createElement("button");
@@ -102,4 +108,9 @@ function initRiverMonitorClient() {
   riverMonitorPodContent.appendChild(riverMonitorPodStartConnBtn);
   riverMonitorConnectionPod = new podUi.Pillbox("Water Level Monitor interface", riverMonitorPodContent);
   globalValues.pillboxManager.attachPillbox(riverMonitorConnectionPod);
+}
+
+function initRiverMonitorClient() {
+  gatherRequiredElements();
+  generateControlPod();
 }
