@@ -16,6 +16,7 @@ const renderer = {
   init: () => {
     globalValues.pillboxManager = new podManagers.PillboxUIManager(document.getElementById("ui-main-container"));
     initRiverMonitorClient();
+    generateArduinoHandlerlPod();
   }
 }
 
