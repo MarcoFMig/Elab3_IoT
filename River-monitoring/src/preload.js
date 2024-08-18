@@ -56,8 +56,9 @@ contextBridge.exposeInMainWorld("systemInterface", {
   guiConsts: guiConsts,
   guiControl: guiControl
 });
+
 contextBridge.exposeInMainWorld("mainCommunicator", {
-  fire: (key, arguments) => ipcRenderer.send(key, arguments),
-  register: (key, action) => ipcRenderer.on(key, (arguments) => action(arguments)),
-  invoke: (key, arguments) => ipcRenderer.invoke(key, arguments)
+  fire: (key, args) => ipcRenderer.send(key, args),
+  register: (key, action) => ipcRenderer.on(key, (args) => action(args)),
+  invoke: (key, args) => ipcRenderer.invoke(key, args)
 });
