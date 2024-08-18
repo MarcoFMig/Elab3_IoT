@@ -1,4 +1,5 @@
-const { contextBridge, ipcRenderer, remote } = require('electron')
+const { contextBridge, ipcRenderer, remote } = require('electron');
+const mqttHandling = require('./mqtthandling.js')
 
 const guiConsts = {
   windowActions: {
@@ -52,8 +53,7 @@ const mqttApi = {
 
 contextBridge.exposeInMainWorld("systemInterface", {
   guiConsts: guiConsts,
-  guiControl: guiControl,
-  mqttApi: mqttApi
+  guiControl: guiControl
 });
 contextBridge.exposeInMainWorld("mainCommunicator", {
   fire: (key, arguments) => ipcRenderer.send(key, arguments),
