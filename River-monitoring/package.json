@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "mqtt": "^5.9.1",
-    "river-monitoring-system": "file:"
+    "river-monitoring-system": "file:",
+    "serialport": "^12.0.0"
   }
 }
