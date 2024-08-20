@@ -12,8 +12,18 @@ class SimpleMQTTConnection {
   disconnectListeners = new Array();
   errorListeners = new Array();
   subscribedTopics = new Map();
+  
+  //MQTT Connection essential elements
+  address;
+  connection;
+  connectionValid;
+  identifier;
+  option;
+
   constructor(address, identifier) {
     this.address = address;
+    this.connection = null;
+    this.connectionValid = false;
     this.identifier = identifier;
     this.options = {
       keepalive: 60,
@@ -31,42 +41,49 @@ class SimpleMQTTConnection {
       },
       rejectUnauthorized: false,
     };
-    this.connection = null;
-    this.connectionValid = false;
   }
+
   connect() {
     this.connection = mqtt.connect(this.address, this.options);
+
     this.connection.on('error', (err) => {
       this.connection.end();
       this.connectionValid = false;
     })
+
     this.connection.on('connect', () => {
       this.connectionValid = true;
       this.connectListeners.forEach(listener => listener());
     })
+
     this.connection.on('reconnect', () => {
       this.reconnectListeners.forEach(listener => listener())
     })
+
     this.connection.on('message', (topic, message, packet) => {
-      
       this.messageListeners.forEach(listener => listener(topic, message, packet));
     })
+
     this.connection.on('end', () => {
       this.connectionValid = false;
       this.disconnectListeners.forEach(listener => listener());
     })
+
     this.connection.on('error', () => {
       this.connectionValid = false;
       this.errorListeners.forEach(listener => listener());
     })
   }
+
   subscribeToTopic(topic) {
     this.subscribedTopics.set(topic, null);
     this.connection.subscribe(topic);
   }
+
   unsubscribeToTopic(topic) {
     this.subscribedTopics.delete(topic);
   }
+
   getSubscribedTopics() {
     return this.subscribedTopics;
   }
@@ -75,24 +92,30 @@ class SimpleMQTTConnection {
     this.connection.end();
     this.connection = null;
   }
+
   sendMessage(topic, message) {
     this.connection.publish(topic, message, {
       qos: this.options.will.qos,
       retain: false
     });
   }
+
   addConnectListener(listener) {
     this.connectListeners.push(listener);
   }
+
   addReconnectListener(listener) {
     this.reconnectListeners.push(listener)
   }
+
   addMessageTopicListener(listener) {
     this.messageListeners.push(listener);
   }
+
   addDisconnectListener(listener) {
     this.disconnectListeners.push(listener);
   }
+
   addErrorListener(listener) {
     this.errorListeners.push(listener);
   }
@@ -100,7 +123,7 @@ class SimpleMQTTConnection {
 
 // END MQTT PART
 
-// COM PART
+// SERIAL COM PART
 
 let comSessions = []
 
@@ -113,23 +136,6 @@ let comSessions = []
  */
 function stringStartsWith(string, stringSet) {
 	return stringSet.some(substr => string.startsWith(substr));
-}
-
-const comManager = {
-	listConnectedDevices: () => {
-		return SerialPort.list()
-	},
-	generateComSession: (path, baudrate, openFunc, dataFunc) => {
-		let ses = new COMSession(path, baudrate, openFunc, dataFunc)
-		comSessions.push(ses)
-		return comSessions.indexOf(ses)
-	},
-	startComSession: (sessionId) => {
-		comSessions[sessionId].startConnection()
-	},
-	sendMessageToComSession: (sessionId, data, errorHandler) => {
-		comSessions[sessionId].sendMessage(data, errorHandler)
-	}
 }
 
 class COMSession {
@@ -145,44 +151,76 @@ class COMSession {
 			path:this.path,
 			baudRate:this.baudrate
 		})
-		const dataParser = this.serialConnPort.pipe(
-			new ReadlineParser({ delimiter: '\n' }))
-			this.serialConnPort.on("open", () => {
-			this.openFunc()
-		});
+
+		const dataParser = this.serialConnPort.pipe(new ReadlineParser({delimiter: '\n'}));
+		
+    this.serialConnPort.on("open", () => {
+      this.openFunc();
+    });
+
 		dataParser.on('data', (data) =>{
-			this.dataFunc(data)
+			this.dataFunc(data);
 		});
 	}
 	
 	sendMessage(data, errorHandler) {
 		this.serialConnPort.write(data, function(error) {
 			if (error) {
-			  return console.log('Error on write: ', err.message)
+			  return console.log('Error on write: ', err.message);
 			}
-		  })
+		})
 	}
 }
 
 // END COM PART
 
+// ---------- CREAZIONE DEL SERVER HTTP ----------
+
 const host = 'localhost';
 const port = 8123;
+
+const requestListener = function (request, resource) {
+  resource.writeHead(200);
+  resource.end(JSON.stringify(messageList));
+};
+
+const server = http.createServer(requestListener);
+
+server.listen(port, host, () => {
+  console.log(`Server is running on http://${host}:${port}`);
+});
+
+// ---------- CREAZIONE DEL COM MANAGER ----------
+
+const serialComunicationManager = {
+	listConnectedDevices: () => {
+		return SerialPort.list()
+	},
+
+	generateComSession: (path, baudrate, openFunc, dataFunc) => {
+		let sesssion = new COMSession(path, baudrate, openFunc, dataFunc)
+		comSessions.push(sesssion)
+		return comSessions.indexOf(sesssion)
+	},
+
+	startComSession: (sessionId) => {
+		comSessions[sessionId].startConnection()
+	},
+
+	sendMessageToComSession: (sessionId, data, errorHandler) => {
+		comSessions[sessionId].sendMessage(data, errorHandler)
+	}
+}
+
+// ---------- CREAZIONE CLIENT MQTT ----------
+
 let messageList = new Array();
 let wlm = new SimpleMQTTConnection("mqtt://broker.mqtt-dashboard.com:1883");
+
 wlm.connect();
 wlm.subscribeToTopic("esiot-2023");
 wlm.addMessageTopicListener((topic, message) => {
   messageList.push(new TextDecoder().decode(message));
-});
-
-const requestListener = function (req, res) {
-  res.writeHead(200);
-  res.end(JSON.stringify(messageList));
-};
-const server = http.createServer(requestListener);
-server.listen(port, host, () => {
-  console.log(`Server is running on http://${host}:${port}`);
 });
 
 let mqttConnections = new Map();
@@ -199,6 +237,7 @@ function requestNewIndex() {
   }
   return returnIndex;
 }
+
 function freeIndex(index) {
   freeIndexes.push(index);
 }
