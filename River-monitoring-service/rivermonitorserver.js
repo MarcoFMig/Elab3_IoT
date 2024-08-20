@@ -207,18 +207,19 @@ const serialComunicationManager = {
 		comSessions[sessionId].startConnection()
 	},
 
-	sendMessageToComSession: (sessionId, data, errorHandler) => {
+	sendMessageToComSession: (sessionId, data, errorHandler = null) => {
 		comSessions[sessionId].sendMessage(data, errorHandler)
 	}
 }
 
 // ---------- CREAZIONE CLIENT MQTT ----------
 
+const topic = "esiot-2023";
 let messageList = new Array();
 let wlm = new SimpleMQTTConnection("mqtt://broker.mqtt-dashboard.com:1883");
 
 wlm.connect();
-wlm.subscribeToTopic("esiot-2023");
+wlm.subscribeToTopic(topic);
 wlm.addMessageTopicListener((topic, message) => {
   messageList.push(new TextDecoder().decode(message));
 });
@@ -240,4 +241,83 @@ function requestNewIndex() {
 
 function freeIndex(index) {
   freeIndexes.push(index);
+}
+
+// ---------- CREAZIONE CLIENT SERIAL ----------
+
+let path = null;
+
+await serialComunicationManager.listConnectedDevices().then((result) => {
+  path = result[0];
+});
+
+let index = serialComunicationManager.generateComSession(path, 115200, () => {
+  console.log("Serial connection OK");
+}, () => {
+  console.log("Wellness check");
+});
+
+serialComunicationManager.startComSession(index);
+
+// ---------- MAIN SYSTEM ----------
+
+// Da cambiare con valori sensati
+const waterLevelThresholds = {
+  WL1 : 0,
+  WL2 : 1,
+  WL3 : 2,
+  WL4 : 3,
+}
+
+const systemStates = {
+  NORMAL : "normal",
+  ALARM_TOO_LOW : "too low",
+  PRE_ALARM_TOO_HIGH : "pre too high",
+  ALARM_TOO_HIGH : "too high",
+  ALARM_TOO_HIGH_CRITIC : "too high critic"
+}
+
+let currentState = null;
+
+function loop() {
+  let espCheck = messageList.pop();
+  
+  if(espCheck != undefined) {
+    let waterLevel = parseFloat(espCheck.split(" ")[1]);
+
+    if (waterLevel >= waterLevelThresholds.WL1
+        && waterLevel <= waterLevelThresholds.WL2) {
+      currentState = systemStates.NORMAL;
+      wlm.sendMessage(topic, "New frequency: F1");
+      serialComunicationManager.sendMessageToComSession(index, "Valve opening: 25%");
+    }
+
+    if (waterLevel < waterLevelThresholds.WL1) {
+      currentState = systemStates.ALARM_TOO_LOW;
+      serialComunicationManager.sendMessageToComSession(index, "Valve opening: 0%");
+    }
+
+    if (waterLevel > waterLevelThresholds.WL2) {
+      wlm.sendMessage(topic, "New frequency: F2");
+      
+      if (waterLevel <= waterLevelThresholds.WL3) {
+          currentState = systemStates.PRE_ALARM_TOO_HIGH;
+      }
+        
+      if (waterLevel > waterLevelThresholds.WL3
+          && waterLevel <= waterLevelThresholds.WL4) {
+        currentState = systemStates.ALARM_TOO_HIGH;
+        wlm.sendMessage(topic, "New frequency: F2");
+        serialComunicationManager.sendMessageToComSession(index, "Valve opening: 50%");
+      }
+        
+      if (waterLevel > waterLevelThresholds.WL4) {
+        currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
+        wlm.sendMessage(topic, "New frequency: F2");
+        serialComunicationManager.sendMessageToComSession(index, "Valve opening: 100%");
+      }
+    }
+
+    console.log(currentState);
+  }
 }
