@@ -1,6 +1,11 @@
 {
   "dependencies": {
+    "aedes": "^0.51.2",
+    "aedes-persistence": "^9.1.2",
+    "aedes-persistence-level": "^8.0.1",
     "mqtt": "^5.10.0",
-    "serialport": "^12.0.0"
+    "redis": "^4.7.0",
+    "serialport": "^12.0.0",
+    "websocket-stream": "^5.5.2"
   }
 }
