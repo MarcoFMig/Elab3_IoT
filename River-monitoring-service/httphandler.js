@@ -9,17 +9,18 @@ class SimpleHTTPServer {
     this.hostname = hostname;
     this.serverReady = false;
   }
-  start() {
+  start(whenReady) {
     if (!this.serverReady) {
-      this.server = http.createServer((request, resource) => {
+      this.server = http.createServer((request, response) => {
         if (this.requestListeners.has(request.method)) {
-          this.requestListeners.get(request.method).array.forEach(listener => {
-            listener(request, resource);
+          this.requestListeners.get(request.method).forEach(listener => {
+            listener(request, response);
           });
         }
       })
       this.server.listen(this.port, this.hostname,
         () => console.log(`Server is running on http://${this.hostname}:${this.port}`));
+        whenReady();
       this.serverReady = true;
     }
   }
@@ -29,7 +30,12 @@ class SimpleHTTPServer {
     console.log(`HTTP Server is no longer running`);
   }
   addEventListener(requestType, listener) {
-    this.requestListeners.set(requestType, listener);
+    if (this.requestListeners.has(requestType)) {
+      this.requestListeners.get(requestType).push(listener);
+      return;
+    }
+    this.requestListeners.set(requestType, new Array());
+    this.requestListeners.get(requestType).push(listener);
   }
 }
 

@@ -1,9 +1,13 @@
 const http = require('http');
 const mqttHandler = require('./mqtthandler.js')
+const httpHandler = require('./httphandler.js')
+const mqttMessaging = require('./mqttmessaging.js')
 const { SerialPort } = require('serialport')
 const { ReadlineParser } = require('@serialport/parser-readline')
 
 const DEFAULT_TOPIC = "esiot-2023";
+const DEFAULT_WLM_PING_TIMING = 1500;
+const DEFAULT_PING_TIMEOUT = 2500;
 
 // SERIAL COM PART
 
@@ -56,22 +60,6 @@ class COMSession {
 
 // END COM PART
 
-// ---------- CREAZIONE DEL SERVER HTTP ----------
-
-const host = 'localhost';
-const port = 8123;
-
-const requestListener = function (request, resource) {
-  resource.writeHead(200);
-  resource.end(JSON.stringify(messageList));
-};
-
-const server = http.createServer(requestListener);
-
-server.listen(port, host, () => {
-  console.log(`Server is running on http://${host}:${port}`);
-});
-
 // ---------- CREAZIONE DEL COM MANAGER ----------
 
 const serialComunicationManager = {
@@ -122,6 +110,8 @@ async function initSerialSession() {
   });
 
   serialComunicationManager.startComSession(index);
+  comReady = true;
+  triggerStateChange();
 }
 
 // ---------- MAIN SYSTEM ----------
@@ -189,11 +179,14 @@ function loop() {
 // SERVER INIT
 
 let mqttServer = null;
-
+let httpServer = null;
+let comReady = false;
+let mqttReady = false;
+let httpReady = false;
 let messageList = new Array();
 let wlm = new mqttHandler.SimpleMQTTConnection();
 
-function initMQTTServer() {
+async function initMQTTServer() {
   mqttServer = new mqttHandler.SimpleMQTTServer();
   mqttServer.start();
 }
@@ -204,10 +197,22 @@ function initMQTTClient() {
   wlm.addMessageTopicListener((DEFAULT_TOPIC, message) => {
     messageList.push(new TextDecoder().decode(message));
   });
+  wlm.addConnectListener(() => {
+    mqttReady = true;
+    triggerStateChange();
+  })
 }
 
-function awaitWLM() {
-  
+function initHTTPServer() {
+  httpServer = new httpHandler.SimpleHTTPServer();
+  httpServer.start(() => {
+    httpReady = true;
+    triggerStateChange();
+  });
+  httpServer.addEventListener("GET", (request, response) => {
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({test:"123"}));
+  });
 }
 
 function printSpacer() {
@@ -216,13 +221,61 @@ function printSpacer() {
 
 async function initServer() {
   printSpacer();
-  console.log("CTRL + C to kill server");
+  console.log(" CTRL + C to kill server");
   printSpacer();
   console.log("==\tServer Init\t==");
+  printSpacer();
   await initSerialSession();
   initMQTTServer();
   initMQTTClient();
-  awaitWLM();
+  initHTTPServer();
+  let tmpFactory = new mqttMessaging.MQTTMessageFactory();
+}
+
+let wlmPing = false;
+let wlmPingValid = false;
+let wlmPingSentTime = null;
+function wlmPostInit() {
+  wlm.addMessageTopicListener((topic, message) => {
+    if (topic == DEFAULT_TOPIC) {
+      console.log(mqttMessaging.MessageParser.parseMessage(new TextDecoder().decode(message)));
+      console.log(mqttMessaging.MessageParser.isPong(new TextDecoder().decode(message)));
+    }
+  });
+  let pingMessage = new mqttMessaging.MQTTMessageFactory().makePing();
+  setInterval(() => {
+    if (wlmPingValid) {
+      let timeDiff = (new Date() - wlmPingSentTime);
+      if (timeDiff >= DEFAULT_PING_TIMEOUT) {
+        console.log("timeout");
+        wlmPingValid = false;
+      }
+      return;
+    }
+    if (wlmPing) {
+      wlm.sendMessage(DEFAULT_TOPIC, pingMessage);
+      console.log("ping!");
+      wlmPingValid = true;
+      wlmPingSentTime = new Date();
+    }
+  }, DEFAULT_WLM_PING_TIMING);
+  wlmPing = true;
+}
+
+function postInit() {
+  wlmPostInit();
+}
+
+async function triggerStateChange() {
+  console.log("Everything ready!");
+  if (comReady && mqttReady && httpReady) {
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    postInit();
+    console.clear();
+    printSpacer();
+    console.log(" CTRL + C to kill server");
+    printSpacer();
+  }
 }
 
 initServer();
