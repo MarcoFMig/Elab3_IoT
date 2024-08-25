@@ -42,7 +42,7 @@ class MQTTMessageFactory {
 
   }
   makePing() {
-    return this.addPrefix(MessageTypes.CONTROL + ":" + ControlTypes.PING);
+    return this.addPrefix(MessageTypes.CONTROL + DEFAULT_SEPARATOR + ControlTypes.PING);
   }
 }
 

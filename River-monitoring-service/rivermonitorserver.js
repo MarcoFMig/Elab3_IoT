@@ -1,4 +1,3 @@
-const http = require('http');
 const mqttHandler = require('./mqtthandler.js')
 const httpHandler = require('./httphandler.js')
 const mqttMessaging = require('./mqttmessaging.js')
@@ -211,7 +210,20 @@ function initHTTPServer() {
   });
   httpServer.addEventListener("GET", (request, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
-    response.end(JSON.stringify({test:"123"}));
+    response.end(JSON.stringify(
+      {
+        statuses: [
+          {
+            name:"Water Level Monitor",
+            isActive:wlmResponding
+          },
+          {
+            name:"Water Channel Controller",
+            isActive:false
+          }
+        ]
+      }
+    ));
   });
 }
 
@@ -232,14 +244,31 @@ async function initServer() {
   let tmpFactory = new mqttMessaging.MQTTMessageFactory();
 }
 
+/**
+ * Determines if the server should ping the water level monitor.
+ */
 let wlmPing = false;
+/**
+ * Determines if there is a ping that needs to be answered.
+ */
 let wlmPingValid = false;
+/**
+ * Timestamp of the last ping message.
+ */
 let wlmPingSentTime = null;
+/**
+ * Determines if the water level monitor is responding to pings.
+ */
+let wlmResponding = false;
 function wlmPostInit() {
   wlm.addMessageTopicListener((topic, message) => {
     if (topic == DEFAULT_TOPIC) {
-      console.log(mqttMessaging.MessageParser.parseMessage(new TextDecoder().decode(message)));
-      console.log(mqttMessaging.MessageParser.isPong(new TextDecoder().decode(message)));
+      if (mqttMessaging.MessageParser.isPong(
+          new TextDecoder().decode(message))) {
+        wlmPingValid = false;
+        wlmPingSentTime = null;
+        wlmResponding = true;
+      }
     }
   });
   let pingMessage = new mqttMessaging.MQTTMessageFactory().makePing();
@@ -247,14 +276,13 @@ function wlmPostInit() {
     if (wlmPingValid) {
       let timeDiff = (new Date() - wlmPingSentTime);
       if (timeDiff >= DEFAULT_PING_TIMEOUT) {
-        console.log("timeout");
         wlmPingValid = false;
+        wlmResponding = false;
       }
       return;
     }
     if (wlmPing) {
       wlm.sendMessage(DEFAULT_TOPIC, pingMessage);
-      console.log("ping!");
       wlmPingValid = true;
       wlmPingSentTime = new Date();
     }
