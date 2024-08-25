@@ -148,7 +148,7 @@ class COMSession {
 
 	startConnection() {
 		this.serialConnPort = new SerialPort({
-			path:this.path,
+			path:this.path.path,
 			baudRate:this.baudrate
 		})
 
@@ -243,24 +243,39 @@ function freeIndex(index) {
   freeIndexes.push(index);
 }
 
-// ---------- CREAZIONE CLIENT SERIAL ----------
+// ---------- CREAZIONE SESSIONE SERIAL ----------
 
 let path = null;
 
-await serialComunicationManager.listConnectedDevices().then((result) => {
+/**
+ * Initializes a COM session.
+ */
+async function initSerialSession() {
+  console.log("Initializing serial session");
+  let result = new Array();
+  do {
+    console.log("Scanning for Arduino devices...");
+    result = await serialComunicationManager.listConnectedDevices();
+    if (result.length == 0) {
+      console.log("Please connect an arduino to proceed with server initialization");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  } while (result.length == 0);
+  console.log("Arduino found!")
   path = result[0];
-});
+  
+  let index = serialComunicationManager.generateComSession(path, 115200, () => {
+    console.log("Serial connection OK");
+  }, () => {
+    console.log("Wellness check");
+  });
 
-let index = serialComunicationManager.generateComSession(path, 115200, () => {
-  console.log("Serial connection OK");
-}, () => {
-  console.log("Wellness check");
-});
+  serialComunicationManager.startComSession(index);
+}
 
-serialComunicationManager.startComSession(index);
+initSerialSession();
 
 // ---------- MAIN SYSTEM ----------
-
 // Da cambiare con valori sensati
 const waterLevelThresholds = {
   WL1 : 0,
