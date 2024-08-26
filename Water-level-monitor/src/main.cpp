@@ -67,7 +67,7 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   scanDelay = 1000/F2;
   Serial.println(String("Message arrived on [") + topic + "] len: " + length );
-  if (strncmp((char *)payload, "WLM-DATA-New frequency", 22) == 0) {
+  if (strncmp((char *)payload, "RMS-DATA-New frequency", 22) == 0) {
     if(payload[25] == '1') {
       scanDelay = 1000/F1;
     }

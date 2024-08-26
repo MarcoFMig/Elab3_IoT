@@ -26,7 +26,7 @@ String tmp;
 char buffer[BUF_SIZE];
 uint8_t angle;
 uint8_t curRow;
-uint8_t perc;
+uint8_t perc = 0;
 
 void LCDWrite(const char * text) {
     lcd.clear();
@@ -46,11 +46,10 @@ void LCDConcat(const char * text) {
 
 void setup() {
   Serial.begin(9600);
-  /*
   lcd.init();
   lcd.backlight();
-  */
   servo.attach(PIN_SERVO);
+  /*
   Serial.println("Swipe");
   lcd.noDisplay();
   servo.write(0);
@@ -58,17 +57,15 @@ void setup() {
   servo.write(180);
   Serial.println(servo.read());
   lcd.display();
+  */
 }
 
 void loop() {
-  /*
   if (button.getCurrentState() == STATE_AUTO) {
     while (Serial.available() == 0) {}
     tmp = Serial.readString();
-    Serial.println("Input ricevuto");
     strncpy(buffer, tmp.c_str(), BUF_SIZE);
     if (strncmp(buffer, valveOpening, 14) == 0) {
-        Serial.println("Entro nello switch");
         switch (buffer[16])
         {
             case 0:
@@ -94,8 +91,10 @@ void loop() {
     snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
     LCDWrite(buffer);
     LCDConcat(manual);
+    uint8_t len = strlen(buffer);
+    while(Serial.availableForWrite() < len) {}
+    Serial.write(buffer);
   }
   servo.write(angle);
   delay(1000);
-  */
 }
