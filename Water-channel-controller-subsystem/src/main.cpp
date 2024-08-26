@@ -7,10 +7,6 @@
 #define STATE_AUTO false
 #define STATE_MANUAL true
 #define PIN_SERVO A5
-#define ANGLE_0 0
-#define ANGLE_25 45
-#define ANGLE_50 90
-#define ANGLE_100 180
 #define BUF_SIZE 30
 
 typedef struct {
@@ -61,13 +57,13 @@ void LCDConcat(STRING_WRAP wrapper) {
 }
 
 uint16_t formatDataMessage(uint8_t perc) {
-    uint16_t message = 0x4000; // sendDataPrefix 0x0200
+    uint16_t message = 0x0200; // sendDataPrefix 0x4000
     uint16_t tmp = perc;
     return message | tmp;
 }
 
 bool checkReceivedMessage() {
-    return (receivedBytes[0] & 0xC0) == 0xC0; // check for dataPrefix 0x06
+    return (receivedBytes[0] & 0x06) == 0x06; // check for dataPrefix 0xC0
 }
 
 void setup() {
@@ -107,7 +103,7 @@ void loop() {
   angle = map(perc, 0, 100, 0, 180);
   snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
   LCDWrite(general);
-  LCDConcat(button.getCurrentState() ? automatic : manual);
+  LCDConcat(button.getCurrentState() ? manual : automatic);
   servo.write(angle);
   delay(1000);
 }
