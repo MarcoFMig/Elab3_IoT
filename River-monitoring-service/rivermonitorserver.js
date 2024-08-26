@@ -12,6 +12,15 @@ const DEFAULT_PING_TIMEOUT = 2500;
 
 let path = null;
 
+
+let serialSessionIndex = null;
+let percievedValveStatus = null;
+let valveStatus = null;
+
+function updatePercievedValveFlow(newFlow) {
+  percievedValveStatus = Number.parseInt(newFlow);
+}
+
 /**
  * Initializes a COM session.
  */
@@ -29,14 +38,24 @@ async function initSerialSession() {
   console.log("Arduino found!")
   path = result[0];
   
-  let index = comHandler.serialComunicationManager.generateComSession(path, 115200, () => {
+  let index = comHandler.serialComunicationManager.generateComSession(path, 9600, () => {
     console.log("Serial connection OK");
-  }, () => {
-    console.log("Wellness check");
+  }, (data) => {
+    let characters = [Number.parseInt(data[0]), Number.parseInt(data[1])];
+    let currentMessage = comMessaging.MessageParser.parseMessage(characters);
+    if (currentMessage == false) {
+      return;
+    }
+    if (currentMessage.messageType == comMessaging.MessageTypes.DATA) {
+      if (currentMessage.content == comMessaging.DataTypes.VALVE_FLOW) {
+        updatePercievedValveFlow(currentMessage.content);
+      }
+    }
   });
 
   comHandler.serialComunicationManager.startComSession(index);
   comReady = true;
+  serialSessionIndex = index;
   triggerStateChange();
 }
 
@@ -109,6 +128,7 @@ let comReady = false;
 let mqttReady = false;
 let httpReady = false;
 let messageList = new Array();
+let waterLevelTrend = new Array();
 let wlm = new mqttHandler.SimpleMQTTConnection();
 
 async function initMQTTServer() {
@@ -138,16 +158,33 @@ function initHTTPServer() {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify(
       {
-        statuses: [
-          {
-            name:"Water Level Monitor",
-            isActive:wlmResponding
+        status: "ok",
+        code: 200,
+        devices: {
+          water_level_monitor: {
+            status: wlmResponding,
+            waterLevelTrend: waterLevelTrend
           },
-          {
-            name:"Water Channel Controller",
-            isActive:false
+          water_channel_controller: {
+            status: false,
+            sentValveOpening: valveStatus,
+            percievedValveOpening: percievedValveStatus
           }
-        ]
+        }
+      }
+    ));
+  });
+  httpServer.addEventListener("POST", (request, response) => {
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    let parsedUrl = new URL(request.url, `http://${request.headers.host}`);
+    let urlParams = parsedUrl.searchParams;
+    if (parsedUrl.searchParams.has("valveOpening")) {
+      updatePercievedValveFlow(parsedUrl.searchParams.get("valveOpening"));
+    }
+    response.end(JSON.stringify(
+      {
+        status: "ok",
+        code: 200
       }
     ));
   });
@@ -216,14 +253,18 @@ function wlmPostInit() {
   wlmPing = true;
 }
 
-let wccPostInit;
+/*let wccStatus;
 function wccPostInit() {
-  
-}
+  setInterval(() => {
+    comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex,
+      comMessaging.MessageFactory.generatePing());
+      console.log("ping");
+  }, DEFAULT_WLM_PING_TIMING);
+}*/
 
 function postInit() {
   wlmPostInit();
-  wccPostInit();
+  //wccPostInit();
 }
 
 async function triggerStateChange() {
