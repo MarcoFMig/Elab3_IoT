@@ -13,6 +13,12 @@
 #define ANGLE_100 180
 #define BUF_SIZE 30
 
+typedef struct {
+    bool isEfficient;
+    char *simpleStr;
+    const __FlashStringHelper *efficientStr;
+} STRING_WRAP;
+
 const char valveOpening[] = "Valve opening:";
 
 Servo servo = Servo();
@@ -26,34 +32,29 @@ uint8_t angle;
 uint8_t curRow;
 uint8_t perc = 0;
 
-void LCDWrite(const char * text) {
-    lcd.clear();
-    lcd.print(text);
-    curRow = 1;
-}
+STRING_WRAP general;
+STRING_WRAP automatic;
+STRING_WRAP manual;
 
-void LCDConcat(const char * text) {
-    if (curRow >= 4) {
-        LCDWrite(text);
+void LCDWrite(STRING_WRAP wrapper) {
+    lcd.clear();
+    if (wrapper.isEfficient) {
+        lcd.print(wrapper.efficientStr);
     } else {
-        lcd.setCursor(0, curRow);
-        lcd.print(text);
-        curRow++;
+        lcd.print(wrapper.simpleStr);
     }
-}
-
-void LCDWrite(const __FlashStringHelper * text) {
-    lcd.clear();
-    lcd.print(text);
+    
     curRow = 1;
 }
 
-void LCDConcat(const __FlashStringHelper * text) {
-    if (curRow >= 4) {
-        LCDWrite(text);
-    } else {
+void LCDConcat(STRING_WRAP wrapper) {
+    if (curRow < 4) {
         lcd.setCursor(0, curRow);
-        lcd.print(text);
+        if (wrapper.isEfficient) {
+            lcd.print(wrapper.efficientStr);
+        } else {
+            lcd.print(wrapper.simpleStr);
+        }
         curRow++;
     }
 }
@@ -63,6 +64,12 @@ void setup() {
   lcd.init();
   lcd.backlight();
   servo.attach(PIN_SERVO);
+  general.isEfficient = false;
+  general.simpleStr = buffer;
+  automatic.isEfficient = true;
+  automatic.efficientStr = F("AUTOMATIC");
+  manual.isEfficient = true;
+  manual.efficientStr = F("MANUAL");
   /*
   Serial.println("Swipe");
   lcd.noDisplay();
@@ -75,20 +82,20 @@ void setup() {
 }
 
 void loop() {
-  snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
-  Serial.println(buffer);
-  uint8_t len = strlen(buffer);
+  snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
+  Serial.println(general.simpleStr);
+  uint8_t len = strlen(general.simpleStr);
   while(Serial.availableForWrite() < len) {}
-  uint8_t bytes = Serial.write(buffer);
+  uint8_t bytes = Serial.write(general.simpleStr);
   Serial.println(bytes);
   delay(3000);
   
   if (button.getCurrentState() == STATE_AUTO) {
     while (Serial.available() == 0) {}
     tmp = Serial.readString();
-    strncpy(buffer, tmp.c_str(), BUF_SIZE);
-    if (strncmp(buffer, valveOpening, 14) == 0) {
-        switch (buffer[16])
+    strncpy(general.simpleStr, tmp.c_str(), BUF_SIZE);
+    if (strncmp(general.simpleStr, valveOpening, 14) == 0) {
+        switch (general.simpleStr[16])
         {
             case 0:
                 angle = ANGLE_0;
@@ -104,18 +111,18 @@ void loop() {
                 break;
         }
         Serial.println(angle);
-        LCDWrite(buffer);
-        LCDConcat(F("AUTOMATIC"));
+        LCDWrite(general);
+        LCDConcat(automatic);
     }
   } else {
     perc = pot.getValue();
     angle = map(perc, 0, 100, 0, 180);
-    snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
-    LCDWrite(buffer);
-    LCDConcat(F("MANUAL"));
-    uint8_t len = strlen(buffer);
+    snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
+    LCDWrite(general);
+    LCDConcat(manual);
+    uint8_t len = strlen(general.simpleStr);
     while(Serial.availableForWrite() < len) {}
-    Serial.write(buffer);
+    Serial.write(general.simpleStr);
   }
   servo.write(angle);
   delay(1000);
