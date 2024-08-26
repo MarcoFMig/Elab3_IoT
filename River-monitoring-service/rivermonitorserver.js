@@ -1,7 +1,8 @@
-const comHandler = require('./comhandler.js')
-const mqttHandler = require('./mqtthandler.js')
-const httpHandler = require('./httphandler.js')
-const mqttMessaging = require('./mqttmessaging.js')
+const comHandler = require('./comhandler.js');
+const mqttHandler = require('./mqtthandler.js');
+const httpHandler = require('./httphandler.js');
+const mqttMessaging = require('./mqttmessaging.js');
+const comMessaging = require('./commessaging.js');
 
 const DEFAULT_TOPIC = "esiot-2023";
 const DEFAULT_WLM_PING_TIMING = 1500;
