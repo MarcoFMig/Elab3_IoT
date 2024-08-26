@@ -245,7 +245,7 @@ function buildDeviceList() {
     })
 }
 
-function generateArduinoHandlerlPod() {
+function generateArduinoHandlerPod() {
     let arduinoHandlerPodText = document.createElement("p");
     arduinoHandlerPodText.innerHTML = "arduinoHandlerPodText foo";
     let arduinoHandlerPodContent = document.createElement("div");
