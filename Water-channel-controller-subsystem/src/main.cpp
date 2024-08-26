@@ -28,6 +28,7 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 20, 4);
 
 String tmp;
 char buffer[BUF_SIZE];
+uint8_t receivedBytes[2];
 uint8_t angle;
 uint8_t curRow;
 uint8_t perc = 0;
@@ -59,6 +60,16 @@ void LCDConcat(STRING_WRAP wrapper) {
     }
 }
 
+uint16_t formatDataMessage(uint8_t perc) {
+    uint16_t message = 0x4000; // sendDataPrefix 0x0200
+    uint16_t tmp = perc;
+    return message | tmp;
+}
+
+bool checkReceivedMessage() {
+    return (receivedBytes[0] & 0xC0) == 0xC0; // check for dataPrefix 0x06
+}
+
 void setup() {
   Serial.begin(9600);
   lcd.init();
@@ -82,48 +93,21 @@ void setup() {
 }
 
 void loop() {
-  snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
-  Serial.println(general.simpleStr);
-  uint8_t len = strlen(general.simpleStr);
-  while(Serial.availableForWrite() < len) {}
-  uint8_t bytes = Serial.write(general.simpleStr);
-  Serial.println(bytes);
-  delay(3000);
-  
   if (button.getCurrentState() == STATE_AUTO) {
     while (Serial.available() == 0) {}
-    tmp = Serial.readString();
-    strncpy(general.simpleStr, tmp.c_str(), BUF_SIZE);
-    if (strncmp(general.simpleStr, valveOpening, 14) == 0) {
-        switch (general.simpleStr[16])
-        {
-            case 0:
-                angle = ANGLE_0;
-                break;
-            case 2:
-                angle = ANGLE_25;
-                break;
-            case 5:
-                angle = ANGLE_50;
-                break;
-            case 1:
-                angle = ANGLE_100;
-                break;
-        }
-        Serial.println(angle);
-        LCDWrite(general);
-        LCDConcat(automatic);
+    Serial.readBytes(receivedBytes, 2);
+    if (checkReceivedMessage()) {
+        perc = receivedBytes[1];
     }
   } else {
     perc = pot.getValue();
-    angle = map(perc, 0, 100, 0, 180);
-    snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
-    LCDWrite(general);
-    LCDConcat(manual);
-    uint8_t len = strlen(general.simpleStr);
-    while(Serial.availableForWrite() < len) {}
-    Serial.write(general.simpleStr);
+    while((unsigned long long) Serial.availableForWrite() < sizeof(uint16_t)) {}
+    Serial.write(formatDataMessage(perc));
   }
+  angle = map(perc, 0, 100, 0, 180);
+  snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
+  LCDWrite(general);
+  LCDConcat(button.getCurrentState() ? automatic : manual);
   servo.write(angle);
   delay(1000);
 }
