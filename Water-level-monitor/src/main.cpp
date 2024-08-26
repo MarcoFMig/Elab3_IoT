@@ -19,9 +19,6 @@
 const char* ssid; //INSERISCI NOME RETE WI-FI
 const char* password; //INSERISCI PASSWORD RETE WI-FI
 
-/* MQTT server address */
-const char* mqtt_server = "broker.mqtt-dashboard.com";
-
 /* MQTT topic */
 const char* topic = "esiot-2023";
 
@@ -108,7 +105,6 @@ void setup() {
   Serial.begin(115200);
   setup_wifi();
   randomSeed(micros());
-  client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 
   scanDelay = 1000/F1;

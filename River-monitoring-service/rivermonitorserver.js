@@ -133,7 +133,7 @@ const systemStates = {
 let currentState = null;
 
 function loop() {
-  let espCheck = messageList.pop();
+  let espCheck = messageList.at(-1); // Index -1 refers to the last item in the array
   
   if(espCheck != undefined) {
     let waterLevel = parseFloat(espCheck.split(" ")[1]);
