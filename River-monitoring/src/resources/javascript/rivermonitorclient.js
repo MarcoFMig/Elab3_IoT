@@ -118,18 +118,17 @@ let waterLevelHistory = new Array();
 let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
 let messageFactory = new MQTTMessageFactory();
 
-function initRiverMonitorComms() {
-  wlm.init();
-  wlm.connect();
-  wlm.subscribeToTopic("esiot-2023");
-  wlm.addMessageTopicListener((topic, message) => {
-    let messageText = new TextDecoder().decode(message);
-    if (messageText.startsWith(messageFactory.getPrefix() + messageFactory.getSeparator())) {
-      return;
-    }
-    console.log("Topic: " + topic + "\n" + "Message: " + messageText);
-  })
-  wlm.sendMessage("esiot-2023", messageFactory.prefixMessage("Ora sì che funziona!"));
+async function initRiverMonitorComms(addressBox, connectionPod) {
+  let address = new URL(`https://${addressBox.value}:8123`);
+  address.searchParams.append("operation", "connectioncheck");
+  let result = await fetch(address);
+  if (result.status != 200) {
+
+  }
+  let inboundText = JSON.parse(await result.text());
+  if (inboundText.code == 200) {
+    globalValues.pillboxManager.detachPillbox(connectionPod);
+  }
 }
 
 function gatherRequiredElements() {
@@ -139,15 +138,20 @@ function gatherRequiredElements() {
 
 function generateControlPod() {
   let riverMonitorPodText = document.createElement("p");
-  riverMonitorPodText.innerHTML = "Water level monitor is not currently connected";
-  let riverMonitorPodStartConnBtn = document.createElement("button");
+  riverMonitorPodText.innerHTML = "Insert the address for a River Monitoring Service";
+  let riverMonitorAddressInsertion = document.createElement('input');
+  riverMonitorAddressInsertion.placeholder = "xxx.xxx.xxx.xxx";
+  riverMonitorAddressInsertion.type = 'text';
+  riverMonitorAddressInsertion.style.width = "80%";
+  let riverMonitorPodStartConnBtn = document.createElement('button');
   riverMonitorPodStartConnBtn.innerHTML = "Connect"
   riverMonitorPodStartConnBtn.style.width = "100%";
-  riverMonitorPodStartConnBtn.onclick = () => initRiverMonitorComms();
+  riverMonitorPodStartConnBtn.onclick = () => initRiverMonitorComms(riverMonitorAddressInsertion, riverMonitorConnectionPod);
   let riverMonitorPodContent = document.createElement("div");
   riverMonitorPodContent.appendChild(riverMonitorPodText);
+  riverMonitorPodContent.appendChild(riverMonitorAddressInsertion);
   riverMonitorPodContent.appendChild(riverMonitorPodStartConnBtn);
-  riverMonitorConnectionPod = new podUi.Pillbox("Water Level Monitor interface", riverMonitorPodContent);
+  riverMonitorConnectionPod = new podUi.Pillbox("Connect to River Monitoring Service", riverMonitorPodContent);
   globalValues.pillboxManager.attachPillbox(riverMonitorConnectionPod);
 }
 
