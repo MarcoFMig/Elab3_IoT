@@ -9,10 +9,10 @@
 #define LED_ON true
 #define LED_OFF false
 #define LED_PIN_GREEN (uint8_t) 5
-#define LED_PIN_RED (uint8_t) 6
+#define LED_PIN_RED (uint8_t) 18
 #define MSG_BUFFER_SIZE  50
-#define SONAR_ECHO_PIN (uint8_t) 7 
-#define SONAR_TRIGGER_PIN (uint8_t) 8
+#define SONAR_ECHO_PIN (uint8_t) 21
+#define SONAR_TRIGGER_PIN (uint8_t) 19
 
 
 /* wifi network info */
@@ -67,8 +67,8 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   scanDelay = 1000/F2;
   Serial.println(String("Message arrived on [") + topic + "] len: " + length );
-  if (strncmp((char *)payload, "New frequency", 13) == 0) {
-    if(payload[16] == '1') {
+  if (strncmp((char *)payload, "WLM-DATA-New frequency", 22) == 0) {
+    if(payload[25] == '1') {
       scanDelay = 1000/F1;
     }
   }
@@ -117,7 +117,7 @@ void loop() {
   }
   client.loop();
 
-  snprintf(msg, MSG_BUFFER_SIZE, "Current level: %g", sonar.getLevel());
+  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-Current level: %g", sonar.getLevel());
   Serial.println(String("Sending data...") + msg);
   /* publishing the msg */
   client.publish(topic, msg);

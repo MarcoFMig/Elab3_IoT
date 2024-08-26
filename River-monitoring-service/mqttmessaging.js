@@ -33,13 +33,13 @@ class MQTTMessageFactory {
   }
   generateSpacing(...data) {
     let monolith = "";
-    data.forEach(data => {
-      monolith + data + this.separator
+    data.forEach(singleData => {
+      monolith += singleData + this.separator;
     });
-    return monolith.slice(0, monolith.length - 2);
+    return monolith.slice(0, monolith.length - 1);
   }
-  makeData(dataToSend) {
-
+  makeData(...dataToSend) {
+    return this.addPrefix(MessageTypes.DATA + DEFAULT_SEPARATOR + this.generateSpacing(dataToSend));
   }
   makePing() {
     return this.addPrefix(MessageTypes.CONTROL + DEFAULT_SEPARATOR + ControlTypes.PING);

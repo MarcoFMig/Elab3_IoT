@@ -131,6 +131,7 @@ const systemStates = {
 }
 
 let currentState = null;
+let fact = new MQTTMessageFactory();
 
 function loop() {
   let espCheck = messageList.at(-1); // Index -1 refers to the last item in the array
@@ -141,7 +142,7 @@ function loop() {
     if (waterLevel >= waterLevelThresholds.WL1
         && waterLevel <= waterLevelThresholds.WL2) {
       currentState = systemStates.NORMAL;
-      wlm.sendMessage(topic, "New frequency: F1");
+      wlm.sendMessage(topic, fact.makeData("New frequency: F1"));
       serialComunicationManager.sendMessageToComSession(index, "Valve opening: 25%");
     }
 
@@ -151,7 +152,7 @@ function loop() {
     }
 
     if (waterLevel > waterLevelThresholds.WL2) {
-      wlm.sendMessage(topic, "New frequency: F2");
+      wlm.sendMessage(topic, fact.makeData("New frequency: F2"));
       
       if (waterLevel <= waterLevelThresholds.WL3) {
           currentState = systemStates.PRE_ALARM_TOO_HIGH;
@@ -160,13 +161,11 @@ function loop() {
       if (waterLevel > waterLevelThresholds.WL3
           && waterLevel <= waterLevelThresholds.WL4) {
         currentState = systemStates.ALARM_TOO_HIGH;
-        wlm.sendMessage(topic, "New frequency: F2");
         serialComunicationManager.sendMessageToComSession(index, "Valve opening: 50%");
       }
         
       if (waterLevel > waterLevelThresholds.WL4) {
         currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-        wlm.sendMessage(topic, "New frequency: F2");
         serialComunicationManager.sendMessageToComSession(index, "Valve opening: 100%");
       }
     }
