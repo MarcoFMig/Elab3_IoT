@@ -13,15 +13,7 @@
 #define ANGLE_100 180
 #define BUF_SIZE 30
 
-enum keyword {
-    VALVE,
-    AUTOMATIC,
-    MANUAL
-};
-
-const char valveOpening[] PROGMEM = "Valve opening:";
-const char automatic[] PROGMEM = "AUTOMATIC";
-const char manual[] PROGMEM = "MANUAL";
+const char valveOpening[] = "Valve opening:";
 
 Servo servo = Servo();
 Button button = Button();
@@ -30,7 +22,6 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 20, 4);
 
 String tmp;
 char buffer[BUF_SIZE];
-char quickBuffer[BUF_SIZE];
 uint8_t angle;
 uint8_t curRow;
 uint8_t perc = 0;
@@ -51,20 +42,20 @@ void LCDConcat(const char * text) {
     }
 }
 
-char *fetchString(enum keyword key) {
-    switch (key) {
-        case VALVE:
-                strcpy_P(quickBuffer, (char *)pgm_read_ptr(&(valveOpening)));
-                break;
-        case AUTOMATIC:
-                strcpy_P(quickBuffer, (char *)pgm_read_ptr(&(automatic)));
-                break;
-        case MANUAL:
-                strcpy_P(quickBuffer, (char *)pgm_read_ptr(&(manual)));
-                break;
-    }
+void LCDWrite(const __FlashStringHelper * text) {
+    lcd.clear();
+    lcd.print(text);
+    curRow = 1;
+}
 
-    return quickBuffer;
+void LCDConcat(const __FlashStringHelper * text) {
+    if (curRow >= 4) {
+        LCDWrite(text);
+    } else {
+        lcd.setCursor(0, curRow);
+        lcd.print(text);
+        curRow++;
+    }
 }
 
 void setup() {
@@ -84,14 +75,14 @@ void setup() {
 }
 
 void loop() {
-  snprintf(buffer, BUF_SIZE, "%s %hhu %c", fetchString(VALVE), perc, '%');
+  snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
   Serial.println(buffer);
   uint8_t len = strlen(buffer);
   while(Serial.availableForWrite() < len) {}
   uint8_t bytes = Serial.write(buffer);
   Serial.println(bytes);
   delay(3000);
-  /*
+  
   if (button.getCurrentState() == STATE_AUTO) {
     while (Serial.available() == 0) {}
     tmp = Serial.readString();
@@ -114,19 +105,18 @@ void loop() {
         }
         Serial.println(angle);
         LCDWrite(buffer);
-        LCDConcat(fetchString(AUTOMATIC));
+        LCDConcat(F("AUTOMATIC"));
     }
   } else {
     perc = pot.getValue();
     angle = map(perc, 0, 100, 0, 180);
-    snprintf(buffer, BUF_SIZE, "%s %hhu %c", fetchString(VALVE), perc, '%');
+    snprintf(buffer, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
     LCDWrite(buffer);
-    LCDConcat(fetchString(MANUAL));
+    LCDConcat(F("MANUAL"));
     uint8_t len = strlen(buffer);
     while(Serial.availableForWrite() < len) {}
     Serial.write(buffer);
   }
   servo.write(angle);
   delay(1000);
-  */
 }
