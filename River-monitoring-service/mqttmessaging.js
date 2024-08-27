@@ -5,7 +5,8 @@ const Author = {
   RIVER_MONITORING_SERVICE: "RMS"
 }
 const DataTypes = {
-  WATER_LEVEL_INFO: "WLI"
+  WATER_LEVEL_INFO: "WLI",
+  SAMPLING_FREQUENCY: "SF"
 }
 const ControlTypes = {
   PING: "PING",
