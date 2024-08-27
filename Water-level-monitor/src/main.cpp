@@ -68,7 +68,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   scanDelay = 1000/F2;
   Serial.println(String("Message arrived on [") + topic + "] len: " + length );
   if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0) {
-    if(payload[13] == '1') {
+    if(payload[12] == '1') {
       scanDelay = 1000/F1;
     }
   }
