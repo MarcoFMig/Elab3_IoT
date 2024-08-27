@@ -98,12 +98,12 @@ function loop() {
         && waterLevel <= waterLevelThresholds.WL2) {
       currentState = systemStates.NORMAL;
       wlm.sendMessage(topic, fact.makeData("New frequency: F1"));
-      serialComunicationManager.sendMessageToComSession(index, "Valve opening: 25%");
+      updateIntendedValveFlow(25);
     }
 
     if (waterLevel < waterLevelThresholds.WL1) {
       currentState = systemStates.ALARM_TOO_LOW;
-      serialComunicationManager.sendMessageToComSession(index, "Valve opening: 0%");
+      updateIntendedValveFlow(0);
     }
 
     if (waterLevel > waterLevelThresholds.WL2) {
@@ -116,12 +116,12 @@ function loop() {
       if (waterLevel > waterLevelThresholds.WL3
           && waterLevel <= waterLevelThresholds.WL4) {
         currentState = systemStates.ALARM_TOO_HIGH;
-        serialComunicationManager.sendMessageToComSession(index, "Valve opening: 50%");
+        updateIntendedValveFlow(50);
       }
         
       if (waterLevel > waterLevelThresholds.WL4) {
         currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-        serialComunicationManager.sendMessageToComSession(index, "Valve opening: 100%");
+        updateIntendedValveFlow(100);
       }
     }
 
