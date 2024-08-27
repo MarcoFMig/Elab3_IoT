@@ -8,7 +8,10 @@ const DEFAULT_TOPIC = "esiot-2023";
 const DEFAULT_WLM_PING_TIMING = 1500;
 const DEFAULT_PING_TIMEOUT = 2500;
 
-// ---------- CREAZIONE SESSIONE SERIAL ----------
+const samplingFrequencies = {
+  F1: 10,
+  F2: 100
+}
 
 let path = null;
 
@@ -16,7 +19,23 @@ let firstValveDetection = true;
 let serialSessionIndex = null;
 let percievedValveStatus = null;
 let intendedValveStatus = null;
+let samplingFrequency = null;
 
+function updateSamplingFrequency(newFrequency) {
+  try {
+    let parsedValue = Number.parseInt(newFrequency);
+    if (Object.values(samplingFrequencies).includes(parsedValue)) {
+      let messageFactory = new mqttMessaging.MQTTMessageFactory();
+      messageFactory.makeData(mqttMessaging.DataTypes.SAMPLING_FREQUENCY, parsedValue);
+      samplingFrequency = parsedValue;
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+}
 function updateIntendedValveFlow(newFlow) {
   intendedValveStatus = Number.parseInt(newFlow);
   comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex, comMessaging.MessageFactory.generateValveCommand(newFlow));
@@ -102,6 +121,14 @@ function initMQTTClient() {
   })
 }
 
+function makeSimpleResponse(message, code) {
+  return JSON.stringify(
+    {
+      status: message,
+      code: code
+    })
+}
+
 function initHTTPServer() {
   httpServer = new httpHandler.SimpleHTTPServer();
   httpServer.start(() => {
@@ -125,6 +152,7 @@ function initHTTPServer() {
         devices: {
           water_level_monitor: {
             status: wlmResponding,
+            samplingFrequency: samplingFrequency,
             waterLevelTrend: waterLevelTrend
           },
           water_channel_controller: {
@@ -140,15 +168,27 @@ function initHTTPServer() {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     let parsedUrl = new URL(request.url, `http://${request.headers.host}`);
     let urlParams = parsedUrl.searchParams;
-    if (parsedUrl.searchParams.has("valveOpening")) {
-      updateIntendedValveFlow(parsedUrl.searchParams.get("valveOpening"));
+    if (!(urlParams.has("operation") && urlParams.has("value"))) {
+      response.end(makeSimpleResponse("Malformed request", 400));
+      return;
     }
-    response.end(JSON.stringify(
-      {
-        status: "ok",
-        code: 200
-      }
-    ));
+    let operationType = urlParams.get("operation");
+    let operationValue = urlParams.get("value");
+    switch (operationType) {
+      case "valveOpening":
+        updateIntendedValveFlow(operationValue);
+      break;
+      case "changeFrequency":
+        if (!updateSamplingFrequency(operationValue)) {
+          response.end(makeSimpleResponse("Incorrect frequency set", 406));
+          return;
+        }
+      break;
+      default:
+        response.end(makeSimpleResponse("Invalid operation", 400));
+        return;
+    }
+    response.end(makeSimpleResponse("done", 200));
   });
 }
 
