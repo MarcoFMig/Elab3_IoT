@@ -12,12 +12,20 @@ const DEFAULT_PING_TIMEOUT = 2500;
 
 let path = null;
 
-
+let firstValveDetection = true;
 let serialSessionIndex = null;
 let percievedValveStatus = null;
-let valveStatus = null;
+let intendedValveStatus = null;
 
+function updateIntendedValveFlow(newFlow) {
+  intendedValveStatus = Number.parseInt(newFlow);
+  comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex, comMessaging.MessageFactory.generateValveCommand(newFlow));
+}
 function updatePercievedValveFlow(newFlow) {
+  if (firstValveDetection) {
+    updateIntendedValveFlow(newFlow);
+    firstValveDetection = false;
+  }
   percievedValveStatus = Number.parseInt(newFlow);
 }
 
@@ -41,6 +49,7 @@ async function initSerialSession() {
   let index = comHandler.serialComunicationManager.generateComSession(path, 9600, () => {
     console.log("Serial connection OK");
   }, (data) => {
+    // console.log("Recieved: " + data.charCodeAt(0).toString(2), data.charCodeAt(1).toString(2))
     let characters = [Number.parseInt(data[0]), Number.parseInt(data[1])];
     let currentMessage = comMessaging.MessageParser.parseMessage(characters);
     if (currentMessage == false) {
@@ -167,7 +176,7 @@ function initHTTPServer() {
           },
           water_channel_controller: {
             status: false,
-            sentValveOpening: valveStatus,
+            intendedValveOpening: intendedValveStatus,
             percievedValveOpening: percievedValveStatus
           }
         }
@@ -179,7 +188,7 @@ function initHTTPServer() {
     let parsedUrl = new URL(request.url, `http://${request.headers.host}`);
     let urlParams = parsedUrl.searchParams;
     if (parsedUrl.searchParams.has("valveOpening")) {
-      updatePercievedValveFlow(parsedUrl.searchParams.get("valveOpening"));
+      updateIntendedValveFlow(parsedUrl.searchParams.get("valveOpening"));
     }
     response.end(JSON.stringify(
       {
