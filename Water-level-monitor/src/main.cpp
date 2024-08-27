@@ -117,7 +117,7 @@ void loop() {
   }
   client.loop();
 
-  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI: %g", sonar.getLevel());
+  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI:%g", sonar.getLevel());
   Serial.println(String("Sending data...") + msg);
   /* publishing the msg */
   client.publish(topic, msg);
