@@ -57,3 +57,10 @@
   width: 80%;
   margin: 10px auto;
 }
+
+#ip-insertion-warning {
+  visibility: hidden;
+  color: orange;
+  border: 1px dashed orange;
+  text-align: center;
+}

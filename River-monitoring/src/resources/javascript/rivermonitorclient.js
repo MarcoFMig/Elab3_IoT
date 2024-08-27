@@ -235,22 +235,38 @@ async function postConnectionInit() {
   }, DEFAULT_UPDATE_INTERVAL_MS);
 }
 
+function setWarningToConnectionBox(warningMessage) {
+  let element = document.getElementById("ip-insertion-warning");
+  if (warningMessage == "") {
+    element.innerHTML = "";
+    element.style.visibility = "hidden";
+  }
+  element.innerHTML = warningMessage;
+  element.style.visibility = "visible";
+}
+
 async function initRiverMonitorComms(addressBox, connectionPod) {
   if (addressBox.value == "") {
     return;
   }
   let address = new URL(`http://${addressBox.value}:8123`);
-  address.searchParams.append("operation", "connectioncheck");
-  let result = await fetch(address);
-  if (result.status != 200) {
-    // TODO: SOMETHING HERE
-  }
-  let inboundText = JSON.parse(await result.text());
-  if (inboundText.code == 200) {
-    globalValues.pillboxManager.detachPillbox(connectionPod);
-    setConnectionActive(true);
-    riverMonitorServerAddress = new URL(`http://${addressBox.value}:8123`);
-    await postConnectionInit();
+  address.searchParams.append("operationType", "connectionCheck");
+  try {
+    let result = await fetch(address);
+    let inboundText = JSON.parse(await result.text());
+    if (result.status != 200) {
+      // TODO: SOMETHING HERE
+    }
+    if (inboundText.code == 200) {
+      globalValues.pillboxManager.detachPillbox(connectionPod);
+      setConnectionActive(true);
+      riverMonitorServerAddress = new URL(`http://${addressBox.value}:8123`);
+      await postConnectionInit();
+    }
+  } catch (error) {
+    if (error.message == "Failed to fetch") {
+      setWarningToConnectionBox("Invalid server address");
+    }
   }
 }
 
@@ -266,6 +282,9 @@ function generateControlPod() {
   riverMonitorAddressInsertion.id = "ip-insertion-bar";
   riverMonitorAddressInsertion.placeholder = "xxx.xxx.xxx.xxx";
   riverMonitorAddressInsertion.type = 'text';
+  let riverMonitorAddressWarning = document.createElement("p");
+  riverMonitorAddressWarning.innerHTML = "";
+  riverMonitorAddressWarning.id = "ip-insertion-warning";
   let riverMonitorPodStartConnBtn = document.createElement('button');
   riverMonitorPodStartConnBtn.innerHTML = "Connect"
   riverMonitorPodStartConnBtn.style.width = "100%";
@@ -273,6 +292,7 @@ function generateControlPod() {
   let riverMonitorPodContent = document.createElement("div");
   riverMonitorPodContent.appendChild(riverMonitorPodText);
   riverMonitorPodContent.appendChild(riverMonitorAddressInsertion);
+  riverMonitorPodContent.appendChild(riverMonitorAddressWarning);
   riverMonitorPodContent.appendChild(riverMonitorPodStartConnBtn);
   riverMonitorPodContent.id = "container-ip-insertion";
   riverMonitorConnectionPod = new podUi.Pillbox("Connect to River Monitoring Service", riverMonitorPodContent);
@@ -298,22 +318,7 @@ async function setConnectionActive(active) {
   }
 }
 
-function setupIndicators() {
-  /*wlm.addConnectListener(() => {
-    connectivityDashboardIcon.src = "./resources/images/vector/network-icon-green.svg"
-  });
-  wlm.addDisconnectListener(() => {
-    connectivityDashboardIcon.src = "./resources/images/vector/network-icon-red.svg"
-  })
-  wlm.addTrafficListener(async () => {
-    trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-green.svg";
-    await new Promise(r => setTimeout(r, 100));
-    trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-white.svg";
-  });*/
-}
-
 function initRiverMonitorClient() {
   gatherRequiredElements();
   generateControlPod();
-  setupIndicators();
 }
