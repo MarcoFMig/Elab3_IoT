@@ -77,15 +77,9 @@ void setup() {
   automatic.efficientStr = F("AUTOMATIC");
   manual.isEfficient = true;
   manual.efficientStr = F("MANUAL");
-  /*
-  Serial.println("Swipe");
-  lcd.noDisplay();
-  servo.write(0);
-  delay(3000);
-  servo.write(180);
-  Serial.println(servo.read());
-  lcd.display();
-  */
+  snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
+  LCDWrite(general);
+  LCDConcat(button.getCurrentState() ? manual : automatic);
 }
 
 void loop() {
