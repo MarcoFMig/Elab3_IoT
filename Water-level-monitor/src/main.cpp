@@ -67,8 +67,8 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   scanDelay = 1000/F2;
   Serial.println(String("Message arrived on [") + topic + "] len: " + length );
-  if (strncmp((char *)payload, "RMS-DATA-New frequency", 22) == 0) {
-    if(payload[25] == '1') {
+  if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0) {
+    if(payload[13] == '1') {
       scanDelay = 1000/F1;
     }
   }
@@ -117,7 +117,7 @@ void loop() {
   }
   client.loop();
 
-  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-Current level: %g", sonar.getLevel());
+  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI: %g", sonar.getLevel());
   Serial.println(String("Sending data...") + msg);
   /* publishing the msg */
   client.publish(topic, msg);

@@ -162,7 +162,7 @@ async function processIncomingData(data) {
   if (waterLevel >= waterLevelThresholds.WL1
       && waterLevel <= waterLevelThresholds.WL2) {
     currentState = systemStates.NORMAL;
-    wlm.sendMessage(topic, messageFactory.makeData("New frequency: F1"));
+    wlm.sendMessage(topic, messageFactory.makeData("SF: 1"));
     copy.searchParams.set(valveOpening, 25);
   }
 
@@ -172,7 +172,7 @@ async function processIncomingData(data) {
   }
 
   if (waterLevel > waterLevelThresholds.WL2) {
-    wlm.sendMessage(topic, messageFactory.makeData("New frequency: F2"));
+    wlm.sendMessage(topic, messageFactory.makeData("SF: 2"));
     
     if (waterLevel <= waterLevelThresholds.WL3) {
         currentState = systemStates.PRE_ALARM_TOO_HIGH;
