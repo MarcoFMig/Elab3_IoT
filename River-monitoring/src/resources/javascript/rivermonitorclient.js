@@ -153,6 +153,8 @@ async function processIncomingData(data) {
   let waterLevel = waterLevelTrend.at(-1).data;
   console.log(waterLevel);
 
+  let copy = riverMonitorServerAddress;
+
   if (waterLevel == undefined) {
     return;
   }
@@ -161,12 +163,12 @@ async function processIncomingData(data) {
       && waterLevel <= waterLevelThresholds.WL2) {
     currentState = systemStates.NORMAL;
     wlm.sendMessage(topic, messageFactory.makeData("New frequency: F1"));
-    updateIntendedValveFlow(25);
+    copy.searchParams.set(valveOpening, 25);
   }
 
   if (waterLevel < waterLevelThresholds.WL1) {
     currentState = systemStates.ALARM_TOO_LOW;
-    updateIntendedValveFlow(0);
+    copy.searchParams.set(valveOpening, 0);
   }
 
   if (waterLevel > waterLevelThresholds.WL2) {
@@ -179,13 +181,21 @@ async function processIncomingData(data) {
     if (waterLevel > waterLevelThresholds.WL3
         && waterLevel <= waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH;
-      updateIntendedValveFlow(50);
+      copy.searchParams.set(valveOpening, 50);
     }
       
     if (waterLevel > waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-      updateIntendedValveFlow(100);
+      copy.searchParams.set(valveOpening, 100);
     }
+  }
+
+  let request = await fetch(copy, {
+    method: "POST"
+  });
+
+  if (request.status != 200) {
+    // TODO: Something here
   }
 
   console.log(currentState);
