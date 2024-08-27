@@ -153,7 +153,11 @@ async function processIncomingData(data) {
   let waterLevel = waterLevelTrend.at(-1).data;
   console.log(waterLevel);
 
-  let copy = riverMonitorServerAddress;
+  let valveCopy = riverMonitorServerAddress;
+  let sampleCopy = riverMonitorServerAddress;
+
+  valveCopy.searchParams.set("operationType", "valveOpening");
+  sampleCopy.searchParams.set("operationType", "changeFrequency");
 
   if (waterLevel == undefined) {
     return;
@@ -162,17 +166,17 @@ async function processIncomingData(data) {
   if (waterLevel >= waterLevelThresholds.WL1
       && waterLevel <= waterLevelThresholds.WL2) {
     currentState = systemStates.NORMAL;
-    wlm.sendMessage(topic, messageFactory.makeData("SF: 1"));
-    copy.searchParams.set(valveOpening, 25);
+    sampleCopy.searchParams.set("value", 1);
+    valveCopy.searchParams.set("value", 25);
   }
 
   if (waterLevel < waterLevelThresholds.WL1) {
     currentState = systemStates.ALARM_TOO_LOW;
-    copy.searchParams.set(valveOpening, 0);
+    valveCopy.searchParams.set("value", 0);
   }
 
   if (waterLevel > waterLevelThresholds.WL2) {
-    wlm.sendMessage(topic, messageFactory.makeData("SF: 2"));
+    sampleCopy.searchParams.set("value", 2);
     
     if (waterLevel <= waterLevelThresholds.WL3) {
         currentState = systemStates.PRE_ALARM_TOO_HIGH;
@@ -181,20 +185,24 @@ async function processIncomingData(data) {
     if (waterLevel > waterLevelThresholds.WL3
         && waterLevel <= waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH;
-      copy.searchParams.set(valveOpening, 50);
+      valveCopy.searchParams.set("value", 50);
     }
       
     if (waterLevel > waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-      copy.searchParams.set(valveOpening, 100);
+      valveCopy.searchParams.set("value", 100);
     }
   }
 
-  let request = await fetch(copy, {
+  let valveRequest = await fetch(valveCopy, {
     method: "POST"
   });
 
-  if (request.status != 200) {
+  let sampleRequest = await fetch(sampleCopy, {
+    method: "POST"
+  });
+
+  if (valveRequest.status != 200 || sampleRequest.status != 200) {
     // TODO: Something here
   }
 
