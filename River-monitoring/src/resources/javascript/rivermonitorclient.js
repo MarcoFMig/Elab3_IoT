@@ -146,6 +146,10 @@ const systemStates = {
 
 let currentState = null;
 
+function getRiverMonitorServerAddress() {
+  return new URL(riverMonitorServerAddress.toString());
+}
+
 async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
   console.log(waterLevelTrend);
@@ -153,8 +157,8 @@ async function processIncomingData(data) {
   let waterLevel = waterLevelTrend.at(-1).data;
   console.log(waterLevel);
 
-  let valveCopy = riverMonitorServerAddress;
-  let sampleCopy = riverMonitorServerAddress;
+  let valveCopy = getRiverMonitorServerAddress();
+  let sampleCopy = getRiverMonitorServerAddress();
 
   valveCopy.searchParams.set("operationType", "valveOpening");
   sampleCopy.searchParams.set("operationType", "changeFrequency");
