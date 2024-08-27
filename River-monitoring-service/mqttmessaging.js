@@ -17,6 +17,13 @@ const MessageTypes = {
 }
 const DEFAULT_MESSAGE_TYPE_LENGTH = 4;
 
+class WaterReadData {
+  constructor(timestamp, data) {
+    this.timestamp = timestamp
+    this.data = data
+  }
+}
+
 class RiverMonitorData {
   constructor(author, data) {
     this.author = author;
@@ -125,4 +132,4 @@ const MessageParser = {
   isPong: (message) => isPong(message)
 }
 
-module.exports = { RiverMonitorData, MQTTMessageFactory, Author, DataTypes, ControlTypes, MessageTypes, DEFAULT_SEPARATOR, MessageParser }
+module.exports = {WaterReadData, RiverMonitorData, MQTTMessageFactory, Author, DataTypes, ControlTypes, MessageTypes, DEFAULT_SEPARATOR, MessageParser }
