@@ -1,5 +1,14 @@
+const DEFAULT_UPDATE_INTERVAL_MS = 2500;
+
 let trafficDashboardIcon = null;
 let connectivityDashboardIcon = null;
+
+class WaterLevelData {
+  constructor(timestamp, reading) {
+    this.timestamp = timestamp;
+    this.reading = reading;
+  }
+}
 
 class WaterLevelMonitor {
   connectListeners = new Array();
@@ -113,21 +122,57 @@ const riverMonitorClientConsts = {
   topic: "esiot-2023"
 }
 
+let riverMonitorServerAddress = null;
 let riverMonitorConnectionPod = null;
 let waterLevelHistory = new Array();
-let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
+//let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
 let messageFactory = new MQTTMessageFactory();
 
+let waterLevelTrend = new Array();
+
+async function processIncomingData(data) {
+  waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
+  console.log(waterLevelTrend);
+}
+
+let requestBusy = false;
+let trafficBusy = false;
+let connectionActive = false;
+async function postConnectionInit() {
+  setInterval(async () => {
+    if (!requestBusy) {
+      requestBusy = true;
+      setTrafficOn(true);
+      let request = await fetch(riverMonitorServerAddress);
+      if (request.status != 200) {
+        // TODO: Something here
+      }
+      let content = JSON.parse(await request.text());
+      processIncomingData(content);
+      setTrafficOn(false);
+      requestBusy = false;
+    } else {
+      return;
+    }
+  }, DEFAULT_UPDATE_INTERVAL_MS);
+}
+
 async function initRiverMonitorComms(addressBox, connectionPod) {
-  let address = new URL(`https://${addressBox.value}:8123`);
+  if (addressBox.value == "") {
+    return;
+  }
+  let address = new URL(`http://${addressBox.value}:8123`);
   address.searchParams.append("operation", "connectioncheck");
   let result = await fetch(address);
   if (result.status != 200) {
-
+    // TODO: SOMETHING HERE
   }
   let inboundText = JSON.parse(await result.text());
   if (inboundText.code == 200) {
     globalValues.pillboxManager.detachPillbox(connectionPod);
+    setConnectionActive(true);
+    riverMonitorServerAddress = new URL(`http://${addressBox.value}:8123`);
+    await postConnectionInit();
   }
 }
 
@@ -140,9 +185,9 @@ function generateControlPod() {
   let riverMonitorPodText = document.createElement("p");
   riverMonitorPodText.innerHTML = "Insert the address for a River Monitoring Service";
   let riverMonitorAddressInsertion = document.createElement('input');
+  riverMonitorAddressInsertion.id = "ip-insertion-bar";
   riverMonitorAddressInsertion.placeholder = "xxx.xxx.xxx.xxx";
   riverMonitorAddressInsertion.type = 'text';
-  riverMonitorAddressInsertion.style.width = "80%";
   let riverMonitorPodStartConnBtn = document.createElement('button');
   riverMonitorPodStartConnBtn.innerHTML = "Connect"
   riverMonitorPodStartConnBtn.style.width = "100%";
@@ -151,12 +196,32 @@ function generateControlPod() {
   riverMonitorPodContent.appendChild(riverMonitorPodText);
   riverMonitorPodContent.appendChild(riverMonitorAddressInsertion);
   riverMonitorPodContent.appendChild(riverMonitorPodStartConnBtn);
+  riverMonitorPodContent.id = "container-ip-insertion";
   riverMonitorConnectionPod = new podUi.Pillbox("Connect to River Monitoring Service", riverMonitorPodContent);
   globalValues.pillboxManager.attachPillbox(riverMonitorConnectionPod);
 }
 
+async function setTrafficOn(traffic) {
+  trafficBusy = traffic;
+  if (traffic) {
+    await new Promise(r => setTimeout(r, 100));
+    trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-green.svg";
+  } else {
+    await new Promise(r => setTimeout(r, 200));
+    trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-white.svg";
+  }
+}
+async function setConnectionActive(active) {
+  connectionActive = active;
+  if (active) {
+    connectivityDashboardIcon.src = "./resources/images/vector/network-icon-green.svg"
+  } else {
+    connectivityDashboardIcon.src = "./resources/images/vector/network-icon-red.svg"
+  }
+}
+
 function setupIndicators() {
-  wlm.addConnectListener(() => {
+  /*wlm.addConnectListener(() => {
     connectivityDashboardIcon.src = "./resources/images/vector/network-icon-green.svg"
   });
   wlm.addDisconnectListener(() => {
@@ -166,7 +231,7 @@ function setupIndicators() {
     trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-green.svg";
     await new Promise(r => setTimeout(r, 100));
     trafficDashboardIcon.src = "./resources/images/vector/traffic-icon-white.svg";
-  });
+  });*/
 }
 
 function initRiverMonitorClient() {

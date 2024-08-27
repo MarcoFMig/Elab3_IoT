@@ -38,6 +38,22 @@
   border-radius: 5px;
   background: black;
   color: white;
-  padding: 4px 9px;
+  padding: 6px 9px;
   border-width: 1px;
+}
+
+.ui-pillbox input {
+  background-color: gray;
+  color: black;
+  font-weight: bold;
+}
+
+#container-ip-insertion {
+  display: flex;
+  flex-flow: column;
+}
+
+#ip-insertion-bar {
+  width: 80%;
+  margin: 10px auto;
 }
