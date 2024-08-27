@@ -97,13 +97,13 @@ void loop() {
     }
   } else {
     perc = pot.getValue();
-    while((unsigned long long) Serial.availableForWrite() < sizeof(uint16_t)) {}
-    Serial.write(formatDataMessage(perc));
   }
   angle = map(perc, 0, 100, 0, 180);
   snprintf(general.simpleStr, BUF_SIZE, "%s %hhu %c", valveOpening, perc, '%');
   LCDWrite(general);
   LCDConcat(button.getCurrentState() ? manual : automatic);
+  while((unsigned long long) Serial.availableForWrite() < sizeof(uint16_t)) {}
+  Serial.write(formatDataMessage(perc));
   servo.write(angle);
   delay(1000);
 }
