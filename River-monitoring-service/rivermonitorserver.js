@@ -136,7 +136,6 @@ let httpServer = null;
 let comReady = false;
 let mqttReady = false;
 let httpReady = false;
-let waterLevelData = new Array();
 let waterLevelTrend = new Array();
 let wlm = new mqttHandler.SimpleMQTTConnection();
 
@@ -149,9 +148,11 @@ function initMQTTClient() {
   wlm.connect();
   wlm.subscribeToTopic(DEFAULT_TOPIC);
   wlm.addMessageTopicListener((DEFAULT_TOPIC, message) => {
-    let data = mqttMessaging.MessageParser(TextDecoder().decode(message))
+    let data = mqttMessaging.MessageParser.parseMessage(new TextDecoder().decode(message));
     if (data) {
-      waterLevelData.push(mqttMessaging.WaterReadData(Date.now(), data))
+      if (data.has(mqttMessaging.DataTypes.WATER_LEVEL_INFO)) {
+        waterLevelTrend.push(new mqttMessaging.WaterReadData(new Date(), Number.parseFloat(data.get(mqttMessaging.DataTypes.WATER_LEVEL_INFO))));
+      }
     }
     return
   });
