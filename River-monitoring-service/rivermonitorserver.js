@@ -170,7 +170,15 @@ function initHTTPServer() {
     triggerStateChange();
   });
   httpServer.addEventListener("GET", (request, response) => {
+    let parsedUrl = new URL(request.url, `http://${request.headers.host}`);
     response.writeHead(200, { 'Content-Type': 'application/json' });
+    if (parsedUrl.searchParams.has("operation") && parsedUrl.searchParams.get("operation") == "connectionCheck") {
+      response.end(JSON.stringify({
+        status: "ok",
+        code: 200
+      }));
+      return;
+    }
     response.end(JSON.stringify(
       {
         status: "ok",
