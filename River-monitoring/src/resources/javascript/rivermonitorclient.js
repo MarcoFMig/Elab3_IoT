@@ -124,15 +124,71 @@ const riverMonitorClientConsts = {
 
 let riverMonitorServerAddress = null;
 let riverMonitorConnectionPod = null;
-let waterLevelHistory = new Array();
 //let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
 let messageFactory = new MQTTMessageFactory();
-
 let waterLevelTrend = new Array();
+
+// Da cambiare con valori sensati
+const waterLevelThresholds = {
+  WL1 : 0,
+  WL2 : 1,
+  WL3 : 2,
+  WL4 : 3,
+}
+
+const systemStates = {
+  NORMAL : "normal",
+  ALARM_TOO_LOW : "too low",
+  PRE_ALARM_TOO_HIGH : "pre too high",
+  ALARM_TOO_HIGH : "too high",
+  ALARM_TOO_HIGH_CRITIC : "too high critic"
+}
+
+let currentState = null;
 
 async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
   console.log(waterLevelTrend);
+
+  let waterLevel = waterLevelTrend.at(-1).data;
+  console.log(waterLevel);
+
+  if (waterLevel == undefined) {
+    return;
+  }
+
+  if (waterLevel >= waterLevelThresholds.WL1
+      && waterLevel <= waterLevelThresholds.WL2) {
+    currentState = systemStates.NORMAL;
+    wlm.sendMessage(topic, messageFactory.makeData("New frequency: F1"));
+    updateIntendedValveFlow(25);
+  }
+
+  if (waterLevel < waterLevelThresholds.WL1) {
+    currentState = systemStates.ALARM_TOO_LOW;
+    updateIntendedValveFlow(0);
+  }
+
+  if (waterLevel > waterLevelThresholds.WL2) {
+    wlm.sendMessage(topic, messageFactory.makeData("New frequency: F2"));
+    
+    if (waterLevel <= waterLevelThresholds.WL3) {
+        currentState = systemStates.PRE_ALARM_TOO_HIGH;
+    }
+      
+    if (waterLevel > waterLevelThresholds.WL3
+        && waterLevel <= waterLevelThresholds.WL4) {
+      currentState = systemStates.ALARM_TOO_HIGH;
+      updateIntendedValveFlow(50);
+    }
+      
+    if (waterLevel > waterLevelThresholds.WL4) {
+      currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
+      updateIntendedValveFlow(100);
+    }
+  }
+
+  console.log(currentState);
 }
 
 let requestBusy = false;

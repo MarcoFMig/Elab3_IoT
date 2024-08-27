@@ -68,67 +68,6 @@ async function initSerialSession() {
   triggerStateChange();
 }
 
-// ---------- MAIN SYSTEM ----------
-// Da cambiare con valori sensati
-const waterLevelThresholds = {
-  WL1 : 0,
-  WL2 : 1,
-  WL3 : 2,
-  WL4 : 3,
-}
-
-const systemStates = {
-  NORMAL : "normal",
-  ALARM_TOO_LOW : "too low",
-  PRE_ALARM_TOO_HIGH : "pre too high",
-  ALARM_TOO_HIGH : "too high",
-  ALARM_TOO_HIGH_CRITIC : "too high critic"
-}
-
-let currentState = null;
-let fact = new mqttMessaging.MQTTMessageFactory();
-
-function loop() {
-  let espCheck = messageList.at(-1); // Index -1 refers to the last item in the array
-  
-  if(espCheck != undefined) {
-    let waterLevel = parseFloat(espCheck.split(" ")[1]);
-
-    if (waterLevel >= waterLevelThresholds.WL1
-        && waterLevel <= waterLevelThresholds.WL2) {
-      currentState = systemStates.NORMAL;
-      wlm.sendMessage(topic, fact.makeData("New frequency: F1"));
-      updateIntendedValveFlow(25);
-    }
-
-    if (waterLevel < waterLevelThresholds.WL1) {
-      currentState = systemStates.ALARM_TOO_LOW;
-      updateIntendedValveFlow(0);
-    }
-
-    if (waterLevel > waterLevelThresholds.WL2) {
-      wlm.sendMessage(topic, fact.makeData("New frequency: F2"));
-      
-      if (waterLevel <= waterLevelThresholds.WL3) {
-          currentState = systemStates.PRE_ALARM_TOO_HIGH;
-      }
-        
-      if (waterLevel > waterLevelThresholds.WL3
-          && waterLevel <= waterLevelThresholds.WL4) {
-        currentState = systemStates.ALARM_TOO_HIGH;
-        updateIntendedValveFlow(50);
-      }
-        
-      if (waterLevel > waterLevelThresholds.WL4) {
-        currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-        updateIntendedValveFlow(100);
-      }
-    }
-
-    console.log(currentState);
-  }
-}
-
 // SERVER INIT
 
 let mqttServer = null;
