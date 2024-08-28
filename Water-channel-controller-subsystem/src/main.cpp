@@ -24,7 +24,8 @@ LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x27, 20, 4);
 
 String tmp;
 char buffer[BUF_SIZE];
-uint8_t byteBuffer[2];
+uint8_t inBuffer[2];
+uint8_t outBuffer[3];
 uint8_t angle;
 uint8_t curRow;
 uint8_t perc = 0;
@@ -57,13 +58,14 @@ void LCDConcat(STRING_WRAP wrapper) {
 }
 
 uint8_t *formatDataMessage(uint8_t perc) {
-    byteBuffer[0] = 0x02; // sendDataPrefix 0x4000
-    byteBuffer[1] = perc;
-    return byteBuffer;
+    outBuffer[0] = 0x02;
+    outBuffer[1] = perc;
+    outBuffer[2] = '\n';
+    return outBuffer;
 }
 
 bool checkReceivedMessage() {
-    return (byteBuffer[0] & 0x06) == 0x06; // check for dataPrefix 0xC0
+    return (inBuffer[0] & 0x06) == 0x06;
 }
 
 void setup() {
@@ -86,9 +88,9 @@ void loop() {
   button.updateState();
   if (button.getCurrentState() == STATE_AUTO) {
     if (Serial.available() >= 2) {
-        Serial.readBytes(byteBuffer, 2);
+        Serial.readBytes(inBuffer, 2);
         if (checkReceivedMessage()) {
-            perc = byteBuffer[1];
+            perc = inBuffer[1];
         }
     }
   } else {
@@ -99,7 +101,7 @@ void loop() {
   LCDWrite(general);
   LCDConcat(button.getCurrentState() ? manual : automatic);
   while((unsigned long long) Serial.availableForWrite() < sizeof(uint16_t)) {}
-  Serial.write(formatDataMessage(perc), 2);
+  Serial.write(formatDataMessage(perc), 3);
   servo.write(angle);
   delay(1000);
 }
