@@ -8,7 +8,7 @@ Potentiometer::Potentiometer() {
 }
 
 uint8_t Potentiometer::getValue() {
-    uint8_t sensorValue = analogRead(this->potentiometerInPin);
+    uint16_t sensorValue = analogRead(this->potentiometerInPin);
     uint8_t outputValue = map(sensorValue, 0, 1023, this->mapLow, this->mapHigh);
     return outputValue;
 }
