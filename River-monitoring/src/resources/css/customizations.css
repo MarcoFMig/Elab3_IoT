@@ -1,7 +1,11 @@
 #water-level-trend-pod {
-  min-width: 550px;
-  min-height: 310px;
+  min-width: 350px;
+  min-height: 250px;
 }
 #water-level-trend-pod > canvas {
   width: 100%;
+}
+#manual-value-content-container {
+  display: flex;
+  flex-flow: column;
 }

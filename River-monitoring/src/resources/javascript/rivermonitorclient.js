@@ -134,14 +134,19 @@ function getRiverMonitorServerAddress() {
 }
 
 async function processIncomingData(data) {
+  if (data.devices.water_channel_controller.softManualOverride == true) {
+    manualOverrideLabelRef.innerHTML = "Soft manual Override: Enabled";
+  } else {
+    manualOverrideLabelRef.innerHTML = "Soft manual Override: Disabled";
+  }
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
   let valveOpening = data.devices.water_channel_controller.percievedValveOpening;
   let currentState = data.systemStatus;
   let currentValveOpening = data.devices.water_channel_controller.intendedValveOpening;
-  updateValveStatus(currentValveOpening);
+  //updateValveStatus(currentValveOpening);
   updateReadings(waterLevelTrend);
   updateState(valveOpening, currentState);
-  console.log(waterLevelTrend);
+  //console.log(waterLevelTrend);
 }
 
 let wlmBoard = null;
@@ -244,6 +249,7 @@ function showFrequencyManipulator(show) {
 }
 
 let currentStateBoard = null;
+let manualOverrideLabelRef = null;
 
 function updateState(valveOpening, currentState) {
   let stateUpdate = document.getElementById("current-state-text");
@@ -256,6 +262,7 @@ function updateState(valveOpening, currentState) {
   }
 }
 
+
 function showCurrentState(show) {
   if (show) {
     let stateParagraph = document.createElement("p");
@@ -264,7 +271,13 @@ function showCurrentState(show) {
     let valveParagraph = document.createElement("p");
     valveParagraph.id = "current-valve-text";
     valveParagraph.innerHTML = "Valve opening: ";
+    let manualOverrideLabel = document.createElement("p");
+    manualOverrideLabel.innerHTML = "Soft manual Override:";
+    manualOverrideLabelRef = manualOverrideLabel;
+    valveParagraph.id = "current-valve-text";
+    valveParagraph.innerHTML = "Valve opening: ";
     let currentStaterPodContentContainer = document.createElement('div');
+    currentStaterPodContentContainer.appendChild(manualOverrideLabel);
     currentStaterPodContentContainer.appendChild(stateParagraph);
     currentStaterPodContentContainer.appendChild(valveParagraph);
     currentStateBoard = new podUi.Pillbox("Current state update", currentStaterPodContentContainer);
@@ -277,21 +290,49 @@ let manualValueSliderRef = null;
 
 function updateValveStatus(valveOpeningLevel) {
   manualValueSliderRef.value = valveOpeningLevel;
-  console.log("Setting opening level to: " + valveOpeningLevel);
+  //console.log("Setting opening level to: " + valveOpeningLevel);
+}
+
+async function toggleManual(manual) {
+  let serverAddress = getRiverMonitorServerAddress();
+  serverAddress.searchParams.set("operation", "setManual");
+  serverAddress.searchParams.set("value", manual);
+  let request = await fetch(serverAddress, {
+    method: "POST"
+  });
+}
+
+async function sendManualCommand(degrees) {
+  toggleManual(true);
+  serverAddress = getRiverMonitorServerAddress();
+  serverAddress.searchParams.set("operation", "valveOpening");
+  serverAddress.searchParams.set("value", degrees);
+  request = await fetch(serverAddress, {
+    method: "POST"
+  });
 }
 
 function showManualValue(show) {
   if (show) {
+    let disableManualValue = document.createElement("button");
+    disableManualValue.innerHTML = "Enable automatic";
+    disableManualValue.onclick = () => toggleManual(false);
     let manualValueSlider = document.createElement("input");
     manualValueSlider.type = "range";
     manualValueSlider.min = 0;
     manualValueSlider.max = 100;
     manualValueSliderRef = manualValueSlider;
+    let manualValueSliderConfirmBtn = document.createElement("button");
+    manualValueSliderConfirmBtn.innerHTML = "Confirm";
+    manualValueSliderConfirmBtn.onclick = () => sendManualCommand(manualValueSlider.value);
     let manualValueLabel = document.createElement("label");
     manualValueLabel.innerHTML = "Manual Value Slider"
     let manualValuePodContentContainer = document.createElement('div');
+    manualValuePodContentContainer.id = "manual-value-content-container";
     manualValuePodContentContainer.appendChild(manualValueLabel);
     manualValuePodContentContainer.appendChild(manualValueSlider);
+    manualValuePodContentContainer.appendChild(manualValueSliderConfirmBtn);
+    manualValuePodContentContainer.appendChild(disableManualValue);
     let manualValueBoard = new podUi.Pillbox("Manual Value Slider", manualValuePodContentContainer);
     manualValueBoard.getElement().id = "manual-value-slider";
     globalValues.pillboxManager.attachPillbox(manualValueBoard);
