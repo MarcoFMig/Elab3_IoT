@@ -327,6 +327,7 @@ function updateState() {
   if ((stateUpdate != undefined && stateUpdate != null)
       || (valveUpdate != undefined && valveUpdate != null)) {
     stateUpdate.innerHTML = "Current state: " + currentState;
+    valveUpdate.innerHTML = "Valve opening: " + valveOpening;
   }
 }
 
