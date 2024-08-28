@@ -41,7 +41,9 @@ function updateSamplingFrequency(newFrequency) {
 }
 function updateIntendedValveFlow(newFlow) {
   intendedValveStatus = Number.parseInt(newFlow);
-  comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex, comMessaging.MessageFactory.generateValveCommand(newFlow));
+  comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex,
+    comMessaging.MessageFactory.generateValveCommand(newFlow),
+  (error) => console.log("Error while communicating with arduino"));
 }
 function updatePercievedValveFlow(newFlow) {
   if (firstValveDetection) {
@@ -71,14 +73,14 @@ async function initSerialSession() {
   let index = comHandler.serialComunicationManager.generateComSession(path, 9600, () => {
     console.log("Serial connection OK");
   }, (data) => {
-    // console.log("Recieved: " + data.charCodeAt(0).toString(2), data.charCodeAt(1).toString(2))
-    let characters = [Number.parseInt(data[0]), Number.parseInt(data[1])];
+    //console.log("Recieved: " + data.charCodeAt(0).toString(2), data.charCodeAt(1).toString(2));
+    let characters = [data.charCodeAt(0), data.charCodeAt(1)];
     let currentMessage = comMessaging.MessageParser.parseMessage(characters);
     if (currentMessage == false) {
       return;
     }
     if (currentMessage.messageType == comMessaging.MessageTypes.DATA) {
-      if (currentMessage.content == comMessaging.DataTypes.VALVE_FLOW) {
+      if (currentMessage.contentType == comMessaging.DataTypes.VALVE_FLOW) {
         updatePercievedValveFlow(currentMessage.content);
       }
     }

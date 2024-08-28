@@ -72,8 +72,8 @@ const MessageParser = {
   isPong: (message) => isPong(message)
 }
 const MessageFactory = {
-  generatePing: () => [(((Author.RIVER_MONITORING_SERVICE << 1) | MessageTypes.CONTROL) << 1) | ControlTypes.PING, 0b0, "\r"],
-  generateValveCommand: (flow) => [(((Author.RIVER_MONITORING_SERVICE << 1) | MessageTypes.DATA) << 1) | DataTypes.VALVE_FLOW, flow, "\r"]
+  generatePing: () => [(((Author.RIVER_MONITORING_SERVICE << 1) | MessageTypes.CONTROL) << 1) | ControlTypes.PING, 0b0],
+  generateValveCommand: (flow) => [(((Author.RIVER_MONITORING_SERVICE << 1) | MessageTypes.DATA) << 1) | DataTypes.VALVE_FLOW, flow]
 }
 
 module.exports = { Author, DataTypes, ControlTypes, MessageTypes, MessageParser, MessageFactory }
