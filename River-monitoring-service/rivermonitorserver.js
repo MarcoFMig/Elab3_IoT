@@ -7,6 +7,8 @@ const comMessaging = require('./commessaging.js');
 const DEFAULT_TOPIC = "esiot-2023";
 const DEFAULT_WLM_PING_TIMING = 1500;
 const DEFAULT_PING_TIMEOUT = 2500;
+const DEFAULT_WATER_LEVEL_TREND_CAP = 65535;
+const DEFAULT_WATER_LEVEL_TREND_PURGE = 250;
 
 const samplingFrequencies = {
   F1: 60,
@@ -17,6 +19,7 @@ let wlm = new mqttHandler.SimpleMQTTConnection();
 
 let path = null;
 
+let softManualOverride = false;
 let firstValveDetection = true;
 let serialSessionIndex = null;
 let percievedValveStatus = null;
@@ -39,18 +42,77 @@ function updateSamplingFrequency(newFrequency) {
     return false;
   }
 }
+
 function updateIntendedValveFlow(newFlow) {
   intendedValveStatus = Number.parseInt(newFlow);
   comHandler.serialComunicationManager.sendMessageToComSession(serialSessionIndex,
     comMessaging.MessageFactory.generateValveCommand(newFlow),
   (error) => console.log("Error while communicating with arduino"));
 }
+
 function updatePercievedValveFlow(newFlow) {
   if (firstValveDetection) {
     updateIntendedValveFlow(newFlow);
     firstValveDetection = false;
   }
   percievedValveStatus = Number.parseInt(newFlow);
+}
+
+// Da cambiare con valori sensati
+const waterLevelThresholds = {
+  WL1 : 0,
+  WL2 : 1,
+  WL3 : 2,
+  WL4 : 3,
+}
+
+const systemStates = {
+  NORMAL : "NORMAL",
+  ALARM_TOO_LOW : "ALARM_TOO_LOW",
+  PRE_ALARM_TOO_HIGH : "PRE_ALARM_TOO_HIGH",
+  ALARM_TOO_HIGH : "ALARM_TOO_HIGH",
+  ALARM_TOO_HIGH_CRITIC : "ALARM_TOO_HIGH_CRITIC"
+}
+
+let currentState = systemStates.NORMAL;
+
+async function generalUpdate(waterLevel) {
+  let valve = null;
+  let frequency = null;
+
+  if (waterLevel >= waterLevelThresholds.WL1
+      && waterLevel <= waterLevelThresholds.WL2) {
+    currentState = systemStates.NORMAL;
+    frequency = 6;
+    valve = 25;
+  }
+
+  if (waterLevel < waterLevelThresholds.WL1) {
+    currentState = systemStates.ALARM_TOO_LOW;
+    valve = 0;
+  }
+
+  if (waterLevel > waterLevelThresholds.WL2) {
+    frequency = 60;
+    
+    if (waterLevel <= waterLevelThresholds.WL3) {
+        currentState = systemStates.PRE_ALARM_TOO_HIGH;
+    }
+      
+    if (waterLevel > waterLevelThresholds.WL3
+        && waterLevel <= waterLevelThresholds.WL4) {
+      currentState = systemStates.ALARM_TOO_HIGH;
+      valve = 50;
+    }
+      
+    if (waterLevel > waterLevelThresholds.WL4) {
+      currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
+      valve = 100;
+    }
+  }
+
+  updateIntendedValveFlow(valve);
+  updateSamplingFrequency(frequency);
 }
 
 /**
@@ -113,7 +175,12 @@ function initMQTTClient() {
     let data = mqttMessaging.MessageParser.parseMessage(new TextDecoder().decode(message));
     if (data) {
       if (data.has(mqttMessaging.DataTypes.WATER_LEVEL_INFO)) {
-        waterLevelTrend.push(new mqttMessaging.WaterReadData(new Date(), Number.parseFloat(data.get(mqttMessaging.DataTypes.WATER_LEVEL_INFO))));
+        let waterLevelData = new mqttMessaging.WaterReadData(new Date(), Number.parseFloat(data.get(mqttMessaging.DataTypes.WATER_LEVEL_INFO)));
+        waterLevelTrend.push(waterLevelData);
+        if (waterLevelTrend.length > DEFAULT_WATER_LEVEL_TREND_CAP) {
+          waterLevelTrend.slice(-DEFAULT_WATER_LEVEL_TREND_PURGE);
+        }
+        generalUpdate(waterLevelData);
       }
     }
     return
@@ -131,6 +198,10 @@ function makeSimpleResponse(message, code) {
       status: message,
       code: code
     })
+}
+
+function updateSoftManualOverride(override) {
+  softManualOverride = override;
 }
 
 function initHTTPServer() {
@@ -164,6 +235,7 @@ function initHTTPServer() {
       {
         status: "ok",
         code: 200,
+        systemStatus: currentState,
         devices: {
           water_level_monitor: {
             status: wlmResponding,
@@ -172,6 +244,7 @@ function initHTTPServer() {
           },
           water_channel_controller: {
             status: false,
+            softManualOverride: softManualOverride,
             intendedValveOpening: intendedValveStatus,
             percievedValveOpening: percievedValveStatus
           }
@@ -196,6 +269,12 @@ function initHTTPServer() {
       case "changeFrequency":
         if (!updateSamplingFrequency(operationValue)) {
           response.end(makeSimpleResponse("Incorrect frequency set", 406));
+          return;
+        }
+      break;
+      case "setManual":
+        if (!updateSoftManualOverride(operationValue)) {
+          response.end(makeSimpleResponse("Server error", 500));
           return;
         }
       break;

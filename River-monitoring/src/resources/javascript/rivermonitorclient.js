@@ -128,25 +128,6 @@ let riverMonitorConnectionPod = null;
 //let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
 let messageFactory = new MQTTMessageFactory();
 let waterLevelTrend = new Array();
-let valveOpening = null;
-
-// Da cambiare con valori sensati
-const waterLevelThresholds = {
-  WL1 : 0,
-  WL2 : 1,
-  WL3 : 2,
-  WL4 : 3,
-}
-
-const systemStates = {
-  NORMAL : "NORMAL",
-  ALARM_TOO_LOW : "ALARM_TOO_LOW",
-  PRE_ALARM_TOO_HIGH : "PRE_ALARM_TOO_HIGH",
-  ALARM_TOO_HIGH : "ALARM_TOO_HIGH",
-  ALARM_TOO_HIGH_CRITIC : "ALARM_TOO_HIGH_CRITIC"
-}
-
-let currentState = null;
 
 function getRiverMonitorServerAddress() {
   return new URL(riverMonitorServerAddress.toString());
@@ -154,69 +135,11 @@ function getRiverMonitorServerAddress() {
 
 async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
-  valveOpening = data.devices.water_channel_controller.percievedValveOpening;
+  let valveOpening = data.devices.water_channel_controller.percievedValveOpening;
+  let currentState = data.systemStatus;
   updateReadings(waterLevelTrend);
+  updateState(valveOpening, currentState);
   console.log(waterLevelTrend);
-
-  if (waterLevelTrend.length == 0) {
-    return;
-  }
-
-  let waterLevel = waterLevelTrend.at(-1).data;
-  console.log(waterLevel);
-  
-  if (waterLevel == undefined) {
-    return;
-  }
-
-  let valveCopy = getRiverMonitorServerAddress();
-  let sampleCopy = getRiverMonitorServerAddress();
-
-  valveCopy.searchParams.set("operationType", "valveOpening");
-  sampleCopy.searchParams.set("operationType", "changeFrequency");
-
-  if (waterLevel >= waterLevelThresholds.WL1
-      && waterLevel <= waterLevelThresholds.WL2) {
-    currentState = systemStates.NORMAL;
-    sampleCopy.searchParams.set("value", 1);
-    valveCopy.searchParams.set("value", 25);
-  }
-
-  if (waterLevel < waterLevelThresholds.WL1) {
-    currentState = systemStates.ALARM_TOO_LOW;
-    valveCopy.searchParams.set("value", 0);
-  }
-
-  if (waterLevel > waterLevelThresholds.WL2) {
-    sampleCopy.searchParams.set("value", 2);
-    
-    if (waterLevel <= waterLevelThresholds.WL3) {
-        currentState = systemStates.PRE_ALARM_TOO_HIGH;
-    }
-      
-    if (waterLevel > waterLevelThresholds.WL3
-        && waterLevel <= waterLevelThresholds.WL4) {
-      currentState = systemStates.ALARM_TOO_HIGH;
-      valveCopy.searchParams.set("value", 50);
-    }
-      
-    if (waterLevel > waterLevelThresholds.WL4) {
-      currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-      valveCopy.searchParams.set("value", 100);
-    }
-  }
-
-  let valveRequest = await fetch(valveCopy, {
-    method: "POST"
-  });
-
-  let sampleRequest = await fetch(sampleCopy, {
-    method: "POST"
-  });
-
-  if (valveRequest.status != 200 || sampleRequest.status != 200) {
-    // TODO: Something here
-  }
 }
 
 let wlmBoard = null;
@@ -320,7 +243,7 @@ function showFrequencyManipulator(show) {
 
 let currentStateBoard = null;
 
-function updateState() {
+function updateState(valveOpening, currentState) {
   let stateUpdate = document.getElementById("current-state-text");
   let valveUpdate = document.getElementById("current-valve-text");
 
@@ -334,6 +257,23 @@ function updateState() {
 function showCurrentState(show) {
   if (show) {
     let stateParagraph = document.createElement("p");
+    stateParagraph.id = "current-state-text";
+    stateParagraph.innerHTML = "Current state: " + currentState;
+    let valveParagraph = document.createElement("p");
+    valveParagraph.id = "current-valve-text";
+    valveParagraph.innerHTML = "Valve opening: " + valveOpening;
+    let currentStaterPodContentContainer = document.createElement('div');
+    currentStaterPodContentContainer.appendChild(stateParagraph);
+    currentStaterPodContentContainer.appendChild(valveParagraph);
+    currentStateBoard = new podUi.Pillbox("Current state update", currentStaterPodContentContainer);
+    currentStateBoard.getElement().id = "current-state-update";
+    globalValues.pillboxManager.attachPillbox(currentStateBoard);
+  }
+}
+
+function showManualValue(show) {
+  if (show) {
+    let manualValueSlider = document.createElement("p");
     stateParagraph.id = "current-state-text";
     stateParagraph.innerHTML = "Current state: " + currentState;
     let valveParagraph = document.createElement("p");
