@@ -30,7 +30,7 @@ PubSubClient client(espClient);
 unsigned long lastMsgTime = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
-bool connectionStarted = false;
+bool pongRequest = false;
 
 Led greenLed = Led(LED_PIN_GREEN);
 Led redLed = Led(LED_PIN_RED);
@@ -67,12 +67,11 @@ void setup_wifi() {
 
 /* MQTT subscribing callback */ //RICEZIONE MESSAGGIO
 void callback(char* topic, byte* payload, unsigned int length) {
-  if (!connectionStarted && strcmp((char *)payload, "RMS-DATA-PING") == 0) {
-    client.publish(topic, "WLM-DATA-PONG");
-    connectionStarted = true;
+  Serial.println(String("Message arrived on [") + topic + "] len: " + length);
+  if (strncmp((char *)payload, "RMS-CTRL-PING", 13) == 0) {
+    pongRequest = true;
   } else {
     scanDelay = MINUTE/F2;
-    Serial.println(String("Message arrived on [") + topic + "] len: " + length);
     if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0 && length < 14) {
       scanDelay = MINUTE/F1;
     }
@@ -114,7 +113,6 @@ void setup() {
   client.setCallback(callback);
 
   scanDelay = MINUTE/F1;
-  Serial.println(scanDelay);
 }
 
 void loop() {
@@ -124,7 +122,10 @@ void loop() {
   }
   client.loop();
 
-  if (connectionStarted) {
+  if (pongRequest) {
+    pongRequest = false;
+    client.publish(topic, "WLM-CTRL-PONG");
+  } else {
     snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI:%g", sonar.getLevel());
     Serial.println(String("Sending data...") + msg);
     /* publishing the msg */
