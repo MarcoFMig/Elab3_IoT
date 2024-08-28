@@ -67,7 +67,7 @@ void setup_wifi() {
 
 /* MQTT subscribing callback */ //RICEZIONE MESSAGGIO
 void callback(char* topic, byte* payload, unsigned int length) {
-  if (!connectionStarted && strncmp((char *)payload, "RMS-DATA-PING", 11) == 0) {
+  if (!connectionStarted && strcmp((char *)payload, "RMS-DATA-PING") == 0) {
     client.publish(topic, "WLM-DATA-PONG");
     connectionStarted = true;
   } else {
