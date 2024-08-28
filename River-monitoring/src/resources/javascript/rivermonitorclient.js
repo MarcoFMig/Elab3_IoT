@@ -155,18 +155,22 @@ async function processIncomingData(data) {
   updateReadings(waterLevelTrend);
   console.log(waterLevelTrend);
 
+  if (waterLevelTrend.length == 0) {
+    return;
+  }
+
   let waterLevel = waterLevelTrend.at(-1).data;
   console.log(waterLevel);
+  
+  if (waterLevel == undefined) {
+    return;
+  }
 
   let valveCopy = getRiverMonitorServerAddress();
   let sampleCopy = getRiverMonitorServerAddress();
 
   valveCopy.searchParams.set("operationType", "valveOpening");
   sampleCopy.searchParams.set("operationType", "changeFrequency");
-
-  if (waterLevel == undefined) {
-    return;
-  }
 
   if (waterLevel >= waterLevelThresholds.WL1
       && waterLevel <= waterLevelThresholds.WL2) {
