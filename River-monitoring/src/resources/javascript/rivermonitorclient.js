@@ -128,6 +128,7 @@ let riverMonitorConnectionPod = null;
 //let wlm = new WaterLevelMonitor("mqtt://broker.mqtt-dashboard.com:1883");
 let messageFactory = new MQTTMessageFactory();
 let waterLevelTrend = new Array();
+let valveOpening = null;
 
 // Da cambiare con valori sensati
 const waterLevelThresholds = {
@@ -153,6 +154,7 @@ function getRiverMonitorServerAddress() {
 
 async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
+  valveOpening = data.devices.water_channel_controller.percievedValveOpening;
   updateReadings(waterLevelTrend);
   console.log(waterLevelTrend);
 
@@ -319,20 +321,26 @@ function showFrequencyManipulator(show) {
 let currentStateBoard = null;
 
 function updateState() {
-  let tmp = document.getElementById("current-state-text");
+  let stateUpdate = document.getElementById("current-state-text");
+  let valveUpdate = document.getElementById("current-valve-text");
 
-  if (tmp != undefined && tmp != null) {
-    tmp.innerHTML = "Current state: " + currentState;
+  if ((stateUpdate != undefined && stateUpdate != null)
+      || (valveUpdate != undefined && valveUpdate != null)) {
+    stateUpdate.innerHTML = "Current state: " + currentState;
   }
 }
 
 function showCurrentState(show) {
   if (show) {
-    let paragraph = document.createElement("p");
-    paragraph.id = "current-state-text";
-    paragraph.innerHTML = "Current state: " + currentState;
+    let stateParagraph = document.createElement("p");
+    stateParagraph.id = "current-state-text";
+    stateParagraph.innerHTML = "Current state: " + currentState;
+    let valveParagraph = document.createElement("p");
+    valveParagraph.id = "current-valve-text";
+    valveParagraph.innerHTML = "Valve opening: " + valveOpening;
     let currentStaterPodContentContainer = document.createElement('div');
-    currentStaterPodContentContainer.appendChild(paragraph);
+    currentStaterPodContentContainer.appendChild(stateParagraph);
+    currentStaterPodContentContainer.appendChild(valveParagraph);
     currentStateBoard = new podUi.Pillbox("Current state update", currentStaterPodContentContainer);
     currentStateBoard.getElement().id = "current-state-update";
     globalValues.pillboxManager.attachPillbox(currentStateBoard);
