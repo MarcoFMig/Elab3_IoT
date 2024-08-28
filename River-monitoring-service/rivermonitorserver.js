@@ -13,6 +13,8 @@ const samplingFrequencies = {
   F2: 100
 }
 
+let wlm = new mqttHandler.SimpleMQTTConnection();
+
 let path = null;
 
 let firstValveDetection = true;
@@ -26,8 +28,9 @@ function updateSamplingFrequency(newFrequency) {
     let parsedValue = Number.parseInt(newFrequency);
     if (Object.values(samplingFrequencies).includes(parsedValue)) {
       let messageFactory = new mqttMessaging.MQTTMessageFactory();
-      messageFactory.makeData(mqttMessaging.DataTypes.SAMPLING_FREQUENCY, parsedValue);
+      let messageToSend = messageFactory.makeData(mqttMessaging.DataTypes.SAMPLING_FREQUENCY + mqttMessaging.DEFAULT_ASSIGNER + parsedValue);
       samplingFrequency = parsedValue;
+      wlm.sendMessage(DEFAULT_TOPIC, messageToSend);
       return true;
     } else {
       return false;
@@ -95,7 +98,6 @@ let comReady = false;
 let mqttReady = false;
 let httpReady = false;
 let waterLevelTrend = new Array();
-let wlm = new mqttHandler.SimpleMQTTConnection();
 
 async function initMQTTServer() {
   mqttServer = new mqttHandler.SimpleMQTTServer();

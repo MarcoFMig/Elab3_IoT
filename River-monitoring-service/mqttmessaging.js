@@ -133,4 +133,4 @@ const MessageParser = {
   isPong: (message) => isPong(message)
 }
 
-module.exports = {WaterReadData, RiverMonitorData, MQTTMessageFactory, Author, DataTypes, ControlTypes, MessageTypes, DEFAULT_SEPARATOR, MessageParser }
+module.exports = {WaterReadData, RiverMonitorData, MQTTMessageFactory, Author, DataTypes, ControlTypes, MessageTypes, DEFAULT_SEPARATOR, MessageParser, DEFAULT_ASSIGNER, DEFAULT_SEPARATOR }
