@@ -5,10 +5,10 @@
 
 }
 
-.ui-pillbox-container {
+#ui-pillbox-container {
   display: flex;
-  flex-wrap: wrap;
   overflow-y: auto;
+  justify-content: center;
 }
 
 .ui-pillbox {
