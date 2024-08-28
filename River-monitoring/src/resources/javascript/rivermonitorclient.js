@@ -152,6 +152,7 @@ function getRiverMonitorServerAddress() {
 
 async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
+  updateReadings(waterLevelTrend);
   console.log(waterLevelTrend);
 
   let waterLevel = waterLevelTrend.at(-1).data;
@@ -213,10 +214,100 @@ async function processIncomingData(data) {
   console.log(currentState);
 }
 
+let wlmBoard = null;
+let wlmBoardChart = null;
+let dataCaptures = null;
+let dataTimestamps = null;
+function updateReadings(waterLevelMonitorTrend) {
+  let iterVector = waterLevelMonitorTrend.length > 200
+    ? waterLevelMonitorTrend.slice(-200)
+    : waterLevelMonitorTrend;
+  iterVector.forEach(capture => {
+    let tmpDate = new Date(capture.timestamp);
+    
+    wlmBoardChart.data.labels.push();
+    wlmBoardChart.data.datasets[0].data.push(capture.reading);
+  });
+}
+function showWLMBoard(show) {
+  if (show) {
+    let chartCanvas = document.createElement('canvas');
+    chartCanvas.id = "water-level-monitor-dashboard-trend";
+    wlmBoardChart = new Chart(chartCanvas, {
+      type: 'bar',
+      data: {
+        datasets: [{
+          label: 'Water Level Trend',
+          data: [],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+            x: {
+                type: 'category'
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Value'
+                }
+            }
+        }
+    }
+    });
+    let wlmPodContentContainer = document.createElement('div');
+    wlmPodContentContainer.appendChild(chartCanvas);
+    wlmBoard = new podUi.Pillbox("Water Level Trend", wlmPodContentContainer);
+    wlmBoard.getElement().id = "water-level-trend-pod";
+    globalValues.pillboxManager.attachPillbox(wlmBoard);
+  }
+}
+
+function updateFrequency(f1Btn, f2Btn, value) {
+
+}
+let frequencyManipulatorBoard = null;
+let captureFrequencyVisualizer = null;
+function showFrequencyManipulator(show) {
+  if (show) {
+    let f1FreqBtn = document.createElement('button');
+    f1FreqBtn.innerHTML = "10 Captures";
+    f1FreqBtn.name = 'frequency-one-selector-btn';
+    f1FreqBtn.id = 'frequency-one-selector-btn';
+    f1FreqBtn.value = 10;
+    let f2FreqBtn = document.createElement('button');
+    f2FreqBtn.name = 'frequency-two-selector-btn';
+    f2FreqBtn.id = 'frequency-two-selector-btn';
+    f2FreqBtn.innerHTML = "100 Captures";
+    f2FreqBtn.value = 100;
+    f1FreqBtn.onclick = () => {
+      updateFrequency(f1FreqBtn, f2FreqBtn, f1FreqBtn.value);
+      captureFrequencyVisualizer.innerHTML = "Current capture frequency: 10 c/m"
+    }
+    f2FreqBtn.onclick = () => {
+      updateFrequency(f1FreqBtn, f2FreqBtn, f2FreqBtn.value);
+      captureFrequencyVisualizer.innerHTML = "Current capture frequency: 100 c/m"
+    }
+    captureFrequencyVisualizer = document.createElement('p');
+    captureFrequencyVisualizer.innerHTML = "Current capture frequency: 10 c/m"
+    let frequencyManipulatorPodContentContainer = document.createElement('div');
+    frequencyManipulatorPodContentContainer.appendChild(captureFrequencyVisualizer);
+    frequencyManipulatorPodContentContainer.appendChild(f1FreqBtn);
+    frequencyManipulatorPodContentContainer.appendChild(f2FreqBtn);
+    frequencyManipulatorBoard = new podUi.Pillbox("Change capture frequency", frequencyManipulatorPodContentContainer);
+    frequencyManipulatorBoard.getElement().id = "frequency-manipulator-pod";
+    globalValues.pillboxManager.attachPillbox(frequencyManipulatorBoard);
+  }
+}
+
 let requestBusy = false;
 let trafficBusy = false;
 let connectionActive = false;
 async function postConnectionInit() {
+  showWLMBoard(true);
+  showFrequencyManipulator(true);
   setInterval(async () => {
     if (!requestBusy) {
       requestBusy = true;
@@ -227,6 +318,7 @@ async function postConnectionInit() {
       }
       let content = JSON.parse(await request.text());
       processIncomingData(content);
+      updateReadings(waterLevelTrend);
       setTrafficOn(false);
       requestBusy = false;
     } else {
