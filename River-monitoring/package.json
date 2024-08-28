@@ -24,6 +24,9 @@
     "electron": "^31.3.1"
   },
   "dependencies": {
+    "chartjs-adapter-moment": "^1.0.1",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.45",
     "mqtt": "^5.9.1",
     "river-monitoring-system": "file:",
     "serialport": "^12.0.0"
