@@ -93,32 +93,35 @@ async function generalUpdate(waterLevel) {
     frequency = 6;
     valve = 25;
   }
-
+  
   if (waterLevel < waterLevelThresholds.WL1) {
     currentState = systemStates.ALARM_TOO_LOW;
     valve = 0;
   }
-
+  
   if (waterLevel > waterLevelThresholds.WL2) {
     frequency = 60;
     
     if (waterLevel <= waterLevelThresholds.WL3) {
-        currentState = systemStates.PRE_ALARM_TOO_HIGH;
+      currentState = systemStates.PRE_ALARM_TOO_HIGH;
     }
-      
+    
     if (waterLevel > waterLevelThresholds.WL3
         && waterLevel <= waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH;
       valve = 50;
     }
-      
+    
     if (waterLevel > waterLevelThresholds.WL4) {
       currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
       valve = 100;
     }
   }
-  updateIntendedValveFlow(valve);
+  
   updateSamplingFrequency(frequency);
+  if (!softManualOverride) {
+    updateIntendedValveFlow(valve);
+  }
 }
 
 /**
@@ -207,7 +210,7 @@ function makeSimpleResponse(message, code) {
 }
 
 function updateSoftManualOverride(override) {
-  softManualOverride = override;
+  softManualOverride = override == "true";
 }
 
 function initHTTPServer() {
