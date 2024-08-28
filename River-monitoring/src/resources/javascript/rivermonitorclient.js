@@ -137,6 +137,8 @@ async function processIncomingData(data) {
   waterLevelTrend = data.devices.water_level_monitor.waterLevelTrend;
   let valveOpening = data.devices.water_channel_controller.percievedValveOpening;
   let currentState = data.systemStatus;
+  let currentValveOpening = data.devices.water_channel_controller.intendedValveOpening;
+  updateValveStatus(currentValveOpening);
   updateReadings(waterLevelTrend);
   updateState(valveOpening, currentState);
   console.log(waterLevelTrend);
@@ -258,10 +260,10 @@ function showCurrentState(show) {
   if (show) {
     let stateParagraph = document.createElement("p");
     stateParagraph.id = "current-state-text";
-    stateParagraph.innerHTML = "Current state: " + currentState;
+    stateParagraph.innerHTML = "Current state: ";
     let valveParagraph = document.createElement("p");
     valveParagraph.id = "current-valve-text";
-    valveParagraph.innerHTML = "Valve opening: " + valveOpening;
+    valveParagraph.innerHTML = "Valve opening: ";
     let currentStaterPodContentContainer = document.createElement('div');
     currentStaterPodContentContainer.appendChild(stateParagraph);
     currentStaterPodContentContainer.appendChild(valveParagraph);
@@ -271,20 +273,28 @@ function showCurrentState(show) {
   }
 }
 
+let manualValueSliderRef = null;
+
+function updateValveStatus(valveOpeningLevel) {
+  manualValueSliderRef.value = valveOpeningLevel;
+  console.log("Setting opening level to: " + valveOpeningLevel);
+}
+
 function showManualValue(show) {
   if (show) {
-    let manualValueSlider = document.createElement("p");
-    stateParagraph.id = "current-state-text";
-    stateParagraph.innerHTML = "Current state: " + currentState;
-    let valveParagraph = document.createElement("p");
-    valveParagraph.id = "current-valve-text";
-    valveParagraph.innerHTML = "Valve opening: " + valveOpening;
-    let currentStaterPodContentContainer = document.createElement('div');
-    currentStaterPodContentContainer.appendChild(stateParagraph);
-    currentStaterPodContentContainer.appendChild(valveParagraph);
-    currentStateBoard = new podUi.Pillbox("Current state update", currentStaterPodContentContainer);
-    currentStateBoard.getElement().id = "current-state-update";
-    globalValues.pillboxManager.attachPillbox(currentStateBoard);
+    let manualValueSlider = document.createElement("input");
+    manualValueSlider.type = "range";
+    manualValueSlider.min = 0;
+    manualValueSlider.max = 100;
+    manualValueSliderRef = manualValueSlider;
+    let manualValueLabel = document.createElement("label");
+    manualValueLabel.innerHTML = "Manual Value Slider"
+    let manualValuePodContentContainer = document.createElement('div');
+    manualValuePodContentContainer.appendChild(manualValueLabel);
+    manualValuePodContentContainer.appendChild(manualValueSlider);
+    let manualValueBoard = new podUi.Pillbox("Manual Value Slider", manualValuePodContentContainer);
+    manualValueBoard.getElement().id = "manual-value-slider";
+    globalValues.pillboxManager.attachPillbox(manualValueBoard);
   }
 }
 
@@ -293,8 +303,9 @@ let trafficBusy = false;
 let connectionActive = false;
 async function postConnectionInit() {
   showWLMBoard(true);
-  showFrequencyManipulator(true);
+  //showFrequencyManipulator(true);
   showCurrentState(true);
+  showManualValue(true);
   setInterval(async () => {
     if (!requestBusy) {
       let serverAddress = getRiverMonitorServerAddress();
@@ -308,7 +319,6 @@ async function postConnectionInit() {
       let content = JSON.parse(await request.text());
       processIncomingData(content);
       updateReadings(waterLevelTrend);
-      updateState();
       setTrafficOn(false);
       requestBusy = false;
     } else {
