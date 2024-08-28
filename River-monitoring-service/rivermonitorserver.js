@@ -60,11 +60,12 @@ function updatePercievedValveFlow(newFlow) {
 
 // Da cambiare con valori sensati
 const waterLevelThresholds = {
-  WL1 : 0,
-  WL2 : 1,
-  WL3 : 2,
-  WL4 : 3,
+  WL1 : 0.150,
+  WL2 : 0.461,
+  WL3 : 0.89,
+  WL4 : 1.10,
 }
+const MAX_SENSOR_VALUE = 1.32;
 
 const systemStates = {
   NORMAL : "NORMAL",
@@ -76,10 +77,16 @@ const systemStates = {
 
 let currentState = systemStates.NORMAL;
 
+/*function convertWaterLevel(waterLevel) {
+  return waterLevel * 100;
+}*/
+
 async function generalUpdate(waterLevel) {
+  //let convertedWl = convertWaterLevel(waterLevel);
   let valve = null;
   let frequency = null;
-
+  waterLevel = MAX_SENSOR_VALUE - waterLevel;
+  
   if (waterLevel >= waterLevelThresholds.WL1
       && waterLevel <= waterLevelThresholds.WL2) {
     currentState = systemStates.NORMAL;
@@ -110,7 +117,6 @@ async function generalUpdate(waterLevel) {
       valve = 100;
     }
   }
-
   updateIntendedValveFlow(valve);
   updateSamplingFrequency(frequency);
 }
@@ -180,7 +186,7 @@ function initMQTTClient() {
         if (waterLevelTrend.length > DEFAULT_WATER_LEVEL_TREND_CAP) {
           waterLevelTrend.slice(-DEFAULT_WATER_LEVEL_TREND_PURGE);
         }
-        generalUpdate(waterLevelData);
+        generalUpdate(waterLevelData.data);
       }
     }
     return
