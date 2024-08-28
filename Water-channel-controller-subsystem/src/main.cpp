@@ -6,7 +6,7 @@
 
 #define STATE_AUTO false
 #define STATE_MANUAL true
-#define PIN_SERVO A5
+#define PIN_SERVO 11
 #define BUF_SIZE 30
 
 typedef struct {
@@ -83,11 +83,13 @@ void setup() {
 }
 
 void loop() {
+  button.updateState();
   if (button.getCurrentState() == STATE_AUTO) {
-    while (Serial.available() == 0) {}
-    Serial.readBytes(receivedBytes, 2);
-    if (checkReceivedMessage()) {
-        perc = receivedBytes[1];
+    if (Serial.available() >= 2) {
+        Serial.readBytes(receivedBytes, 2);
+        if (checkReceivedMessage()) {
+            perc = receivedBytes[1];
+        }
     }
   } else {
     perc = pot.getValue();
