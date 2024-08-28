@@ -4,22 +4,23 @@
 #include "Led.hpp"
 #include "Sonar.hpp"
 
-#define F1 (uint8_t) 10
-#define F2 (uint8_t) 100
+#define MINUTE (uint16_t) 60000
+#define F1 (uint16_t) 6
+#define F2 (uint16_t) 60
 #define LED_ON true
 #define LED_OFF false
-#define LED_PIN_GREEN (uint8_t) 5
-#define LED_PIN_RED (uint8_t) 18
+#define LED_PIN_GREEN (uint8_t) 19
+#define LED_PIN_RED (uint8_t) 5
 #define MSG_BUFFER_SIZE  50
-#define SONAR_ECHO_PIN (uint8_t) 21
-#define SONAR_TRIGGER_PIN (uint8_t) 19
-
+#define SONAR_ECHO_PIN (uint8_t) 2
+#define SONAR_TRIGGER_PIN (uint8_t) 18
 
 /* wifi network info */
-const char* ssid; //INSERISCI NOME RETE WI-FI
-const char* password; //INSERISCI PASSWORD RETE WI-FI
+const char* ssid = "INSERT WIFI SSID HERE"; //INSERISCI NOME RETE WI-FI
+const char* password = "INSERT WIFI PASSWORD HERE"; //INSERISCI PASSWORD RETE WI-FI
 
 /* MQTT topic */
+const char* broker = "INSERT BROKER IP HERE";
 const char* topic = "esiot-2023";
 
 /* MQTT client management */
@@ -33,7 +34,7 @@ int value = 0;
 Led greenLed = Led(LED_PIN_GREEN);
 Led redLed = Led(LED_PIN_RED);
 Sonar sonar = Sonar(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
-uint8_t scanDelay;
+uint16_t scanDelay;
 
 void updateLedStates(bool isNetOk, bool isSendDataOk) {
   if (isNetOk && isSendDataOk) {
@@ -65,12 +66,10 @@ void setup_wifi() {
 
 /* MQTT subscribing callback */ //RICEZIONE MESSAGGIO
 void callback(char* topic, byte* payload, unsigned int length) {
-  scanDelay = 1000/F2;
-  Serial.println(String("Message arrived on [") + topic + "] len: " + length );
-  if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0) {
-    if(strlen(payload) < 15) {
-      scanDelay = 1000/F1;
-    }
+  scanDelay = MINUTE/F2;
+  Serial.println(String("Message arrived on [") + topic + "] len: " + length);
+  if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0 && length < 14) {
+    scanDelay = MINUTE/F1;
   }
 }
 
@@ -105,9 +104,11 @@ void setup() {
   Serial.begin(115200);
   setup_wifi();
   randomSeed(micros());
+  client.setServer(broker, 1883);
   client.setCallback(callback);
 
-  scanDelay = 1000/F1;
+  scanDelay = MINUTE/F1;
+  Serial.println(scanDelay);
 }
 
 void loop() {
