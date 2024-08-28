@@ -1,4 +1,5 @@
 const DEFAULT_UPDATE_INTERVAL_MS = 2500;
+const DEFAULT_TIME_LIMIT_MINUTES = 1;
 
 let trafficDashboardIcon = null;
 let connectivityDashboardIcon = null;
@@ -226,19 +227,28 @@ function updateReadings(waterLevelMonitorTrend) {
   let iterVector = waterLevelMonitorTrend.length > 200
     ? waterLevelMonitorTrend.slice(-200)
     : waterLevelMonitorTrend;
-  iterVector.forEach(capture => {
+  /*iterVector.forEach(capture => {
     let tmpDate = new Date(capture.timestamp);
     
-    wlmBoardChart.data.labels.push();
-    wlmBoardChart.data.datasets[0].data.push(capture.reading);
-  });
+    wlmBoardChart.data.labels.push(tmpDate.getHours() + ":" + tmpDate.getMinutes() + ":" + tmpDate.getSeconds());
+    wlmBoardChart.data.datasets[0].data.push(capture.data);
+    wlmBoardChart.update();
+  });*/
+  let dateLabels = iterVector.map(capture =>
+    capture.timestamp.getHours() + ":" +
+    capture.timestamp.getMinutes() + ":" +
+    capture.timestamp.getSeconds());
+  let dateValues = iterVector.map(capture => capture.data);
+  wlmBoardChart.data.labels = dateLabels;
+  wlmBoardChart.data.datasets[0].data = dateValues;
+  wlmBoardChart.update();
 }
 function showWLMBoard(show) {
   if (show) {
     let chartCanvas = document.createElement('canvas');
     chartCanvas.id = "water-level-monitor-dashboard-trend";
     wlmBoardChart = new Chart(chartCanvas, {
-      type: 'bar',
+      type: 'line',
       data: {
         datasets: [{
           label: 'Water Level Trend',
@@ -314,9 +324,11 @@ async function postConnectionInit() {
   showFrequencyManipulator(true);
   setInterval(async () => {
     if (!requestBusy) {
+      let serverAddress = getRiverMonitorServerAddress();
+      serverAddress.searchParams.set("timeWindowMinutes", DEFAULT_TIME_LIMIT_MINUTES);
       requestBusy = true;
       setTrafficOn(true);
-      let request = await fetch(riverMonitorServerAddress);
+      let request = await fetch(serverAddress);
       if (request.status != 200) {
         // TODO: Something here
       }

@@ -147,6 +147,17 @@ function initHTTPServer() {
       }));
       return;
     }
+    let wltToSend = waterLevelTrend;
+    if (parsedUrl.searchParams.has("timeWindowMinutes")) {
+      let timeWindow = Number.parseInt(parsedUrl.searchParams.get("timeWindowMinutes"));
+      if (!isNaN(timeWindow)) {
+        let timeLimit = new Date();
+        timeLimit.setMinutes(timeLimit.getMinutes() - timeWindow);
+        wltToSend = wltToSend.filter(
+          capture => capture.timestamp >= timeLimit
+        );
+      }
+    }
     response.end(JSON.stringify(
       {
         status: "ok",
@@ -155,7 +166,7 @@ function initHTTPServer() {
           water_level_monitor: {
             status: wlmResponding,
             samplingFrequency: samplingFrequency,
-            waterLevelTrend: waterLevelTrend
+            waterLevelTrend: wltToSend
           },
           water_channel_controller: {
             status: false,
