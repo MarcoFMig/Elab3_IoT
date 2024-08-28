@@ -9,8 +9,8 @@ const DEFAULT_WLM_PING_TIMING = 1500;
 const DEFAULT_PING_TIMEOUT = 2500;
 
 const samplingFrequencies = {
-  F1: 10,
-  F2: 100
+  F1: 60,
+  F2: 6
 }
 
 let wlm = new mqttHandler.SimpleMQTTConnection();
