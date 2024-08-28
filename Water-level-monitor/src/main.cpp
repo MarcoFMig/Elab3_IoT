@@ -30,6 +30,7 @@ PubSubClient client(espClient);
 unsigned long lastMsgTime = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
+bool connectionStarted = false;
 
 Led greenLed = Led(LED_PIN_GREEN);
 Led redLed = Led(LED_PIN_RED);
@@ -66,10 +67,15 @@ void setup_wifi() {
 
 /* MQTT subscribing callback */ //RICEZIONE MESSAGGIO
 void callback(char* topic, byte* payload, unsigned int length) {
-  scanDelay = MINUTE/F2;
-  Serial.println(String("Message arrived on [") + topic + "] len: " + length);
-  if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0 && length < 14) {
-    scanDelay = MINUTE/F1;
+  if (!connectionStarted && strncmp((char *)payload, "RMS-DATA-PING", 11) == 0) {
+    client.publish(topic, "WLM-DATA-PONG");
+    connectionStarted = true;
+  } else {
+    scanDelay = MINUTE/F2;
+    Serial.println(String("Message arrived on [") + topic + "] len: " + length);
+    if (strncmp((char *)payload, "RMS-DATA-SF", 11) == 0 && length < 14) {
+      scanDelay = MINUTE/F1;
+    }
   }
 }
 
@@ -118,8 +124,10 @@ void loop() {
   }
   client.loop();
 
-  snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI:%g", sonar.getLevel());
-  Serial.println(String("Sending data...") + msg);
-  /* publishing the msg */
-  client.publish(topic, msg);
+  if (connectionStarted) {
+    snprintf(msg, MSG_BUFFER_SIZE, "WLM-DATA-WLI:%g", sonar.getLevel());
+    Serial.println(String("Sending data...") + msg);
+    /* publishing the msg */
+    client.publish(topic, msg);
+  }
 }
