@@ -1,0 +1,7 @@
+#water-level-trend-pod {
+  min-width: 350px;
+  min-height: 250px;
+}
+#water-level-trend-pod > canvas {
+  width: 100%;
+}
