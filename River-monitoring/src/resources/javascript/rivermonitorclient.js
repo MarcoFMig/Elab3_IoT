@@ -138,11 +138,11 @@ const waterLevelThresholds = {
 }
 
 const systemStates = {
-  NORMAL : "normal",
-  ALARM_TOO_LOW : "too low",
-  PRE_ALARM_TOO_HIGH : "pre too high",
-  ALARM_TOO_HIGH : "too high",
-  ALARM_TOO_HIGH_CRITIC : "too high critic"
+  NORMAL : "NORMAL",
+  ALARM_TOO_LOW : "ALARM_TOO_LOW",
+  PRE_ALARM_TOO_HIGH : "PRE_ALARM_TOO_HIGH",
+  ALARM_TOO_HIGH : "ALARM_TOO_HIGH",
+  ALARM_TOO_HIGH_CRITIC : "ALARM_TOO_HIGH_CRITIC"
 }
 
 let currentState = null;
@@ -215,8 +215,6 @@ async function processIncomingData(data) {
   if (valveRequest.status != 200 || sampleRequest.status != 200) {
     // TODO: Something here
   }
-
-  console.log(currentState);
 }
 
 let wlmBoard = null;
@@ -234,10 +232,11 @@ function updateReadings(waterLevelMonitorTrend) {
     wlmBoardChart.data.datasets[0].data.push(capture.data);
     wlmBoardChart.update();
   });*/
-  let dateLabels = iterVector.map(capture =>
-    capture.timestamp.getHours() + ":" +
-    capture.timestamp.getMinutes() + ":" +
-    capture.timestamp.getSeconds());
+  let dateLabels = iterVector.map(capture => new Date(capture.timestamp));
+  dateLabels = dateLabels.map(capture =>
+    capture.getHours().toString() + ":" +
+    capture.getMinutes().toString() + ":" +
+    capture.getSeconds().toString());
   let dateValues = iterVector.map(capture => capture.data);
   wlmBoardChart.data.labels = dateLabels;
   wlmBoardChart.data.datasets[0].data = dateValues;
@@ -282,6 +281,7 @@ function showWLMBoard(show) {
 function updateFrequency(f1Btn, f2Btn, value) {
 
 }
+
 let frequencyManipulatorBoard = null;
 let captureFrequencyVisualizer = null;
 function showFrequencyManipulator(show) {
@@ -290,12 +290,12 @@ function showFrequencyManipulator(show) {
     f1FreqBtn.innerHTML = "10 Captures";
     f1FreqBtn.name = 'frequency-one-selector-btn';
     f1FreqBtn.id = 'frequency-one-selector-btn';
-    f1FreqBtn.value = 10;
+    f1FreqBtn.value = 60;
     let f2FreqBtn = document.createElement('button');
     f2FreqBtn.name = 'frequency-two-selector-btn';
     f2FreqBtn.id = 'frequency-two-selector-btn';
     f2FreqBtn.innerHTML = "100 Captures";
-    f2FreqBtn.value = 100;
+    f2FreqBtn.value = 6;
     f1FreqBtn.onclick = () => {
       updateFrequency(f1FreqBtn, f2FreqBtn, f1FreqBtn.value);
       captureFrequencyVisualizer.innerHTML = "Current capture frequency: 10 c/m"
@@ -316,12 +316,36 @@ function showFrequencyManipulator(show) {
   }
 }
 
+let currentStateBoard = null;
+
+function updateState() {
+  let tmp = document.getElementById("current-state-text");
+
+  if (tmp != undefined && tmp != null) {
+    tmp.innerHTML = "Current state: " + currentState;
+  }
+}
+
+function showCurrentState(show) {
+  if (show) {
+    let paragraph = document.createElement("p");
+    paragraph.id = "current-state-text";
+    paragraph.innerHTML = "Current state: " + currentState;
+    let currentStaterPodContentContainer = document.createElement('div');
+    currentStaterPodContentContainer.appendChild(paragraph);
+    currentStateBoard = new podUi.Pillbox("Current state update", currentStaterPodContentContainer);
+    currentStateBoard.getElement().id = "current-state-update";
+    globalValues.pillboxManager.attachPillbox(currentStateBoard);
+  }
+}
+
 let requestBusy = false;
 let trafficBusy = false;
 let connectionActive = false;
 async function postConnectionInit() {
   showWLMBoard(true);
   showFrequencyManipulator(true);
+  showCurrentState(true);
   setInterval(async () => {
     if (!requestBusy) {
       let serverAddress = getRiverMonitorServerAddress();
@@ -335,6 +359,7 @@ async function postConnectionInit() {
       let content = JSON.parse(await request.text());
       processIncomingData(content);
       updateReadings(waterLevelTrend);
+      updateState();
       setTrafficOn(false);
       requestBusy = false;
     } else {
