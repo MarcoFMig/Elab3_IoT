@@ -86,36 +86,27 @@ async function generalUpdate(waterLevel) {
   let valve = null;
   let frequency = null;
   waterLevel = MAX_SENSOR_VALUE - waterLevel;
-  
-  if (waterLevel >= waterLevelThresholds.WL1
-      && waterLevel <= waterLevelThresholds.WL2) {
+
+  if (waterLevel < waterLevelThresholds.WL1) {
+    currentState = systemStates.ALARM_TOO_LOW;
+    frequency = 6;
+    valve = 0;
+  } else if (waterLevel < waterLevelThresholds.WL2) {
     currentState = systemStates.NORMAL;
     frequency = 6;
     valve = 25;
-  }
-  
-  if (waterLevel < waterLevelThresholds.WL1) {
-    currentState = systemStates.ALARM_TOO_LOW;
-    valve = 0;
-  }
-  
-  if (waterLevel > waterLevelThresholds.WL2) {
+  } else if (waterLevel < waterLevelThresholds.WL3) {
+    currentState = systemStates.PRE_ALARM_TOO_HIGH;
     frequency = 60;
-    
-    if (waterLevel <= waterLevelThresholds.WL3) {
-      currentState = systemStates.PRE_ALARM_TOO_HIGH;
-    }
-    
-    if (waterLevel > waterLevelThresholds.WL3
-        && waterLevel <= waterLevelThresholds.WL4) {
-      currentState = systemStates.ALARM_TOO_HIGH;
-      valve = 50;
-    }
-    
-    if (waterLevel > waterLevelThresholds.WL4) {
-      currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
-      valve = 100;
-    }
+    valve = 25;
+  } else if (waterLevel < waterLevelThresholds.WL4) {
+    currentState = systemStates.ALARM_TOO_HIGH;
+    frequency = 60;
+    valve = 50;
+  } else {
+    currentState = systemStates.ALARM_TOO_HIGH_CRITIC;
+    frequency = 60;
+    valve = 100;
   }
   
   updateSamplingFrequency(frequency);
